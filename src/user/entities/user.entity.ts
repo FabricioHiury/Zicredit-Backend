@@ -9,3 +9,12 @@ export class User {
   created_at: Date;
   role: Roles;
 }
+
+export interface UpdateUserData {
+  name?: string;
+  email?: string;
+  cpf?: string;
+  phone?: string;
+  role?: 'ZICREDIT' | 'SELLER' | 'COMPANY' | 'INVESTOR';
+  password?: string;
+}

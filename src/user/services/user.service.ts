@@ -7,15 +7,18 @@ import * as bycrpt from 'bcrypt';
 import { PrismaService } from 'src/database/prisma.service';
 import { v4 as uuid } from 'uuid';
 import { CreateUserDto } from '../dto/create-user.dto';
-//import { UpdateUserDto } from '../dto/update-user.dto';
-//import { PaginationService } from 'src/pagination/pagination.service';
-//import { PaginationParamsDto } from 'src/pagination/pagination.dto';
+import { PaginationService } from 'src/pagination/pagination.service';
+import { PaginationParamsDto } from 'src/pagination/pagination.dto';
+import { Prisma } from '@prisma/client';
+import { UpdateUserDto } from '../dto/update-user.dto';
+import * as bcrypt from 'bcrypt';
+import { UpdateUserData } from '../entities/user.entity';
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly prismaService: PrismaService,
-    //private readonly paginationService: PaginationService,
+    private readonly paginationService: PaginationService,
   ) {}
   async create(createUserDto: CreateUserDto) {
     const findOneUser = await this.prismaService.user.findFirst({
@@ -56,13 +59,138 @@ export class UserService {
     }
   }
 
-  async findByCpf(cpf: string) {
+  async findByIdentifier(identifier: string) {
     try {
       return await this.prismaService.user.findFirst({
-        where: { cpf },
+        include: {
+          company: true,
+        },
+        where: {
+          OR: [{ cpf: identifier }, { company: { cnpj: identifier } }],
+        },
       });
     } catch (error) {
       throw new BadRequestException(error);
+    }
+  }
+
+  async findAll(paginationParams: PaginationParamsDto) {
+    try {
+      let select = {
+        id: true,
+        name: true,
+        email: true,
+        cpf: true,
+        phone: true,
+        role: true,
+        created_at: true,
+        deleted_at: true,
+      };
+      let response = [];
+      const whereClause: Prisma.UserWhereInput = {};
+
+      if (paginationParams.search) {
+        whereClause.OR = [
+          {
+            email: { startsWith: paginationParams.search, mode: 'insensitive' },
+          },
+          {
+            cpf: {
+              startsWith: paginationParams.search,
+              mode: 'insensitive',
+            },
+          },
+          {
+            name: { startsWith: paginationParams.search, mode: 'insensitive' },
+          },
+        ];
+      }
+
+      response = await this.prismaService.user.findMany({
+        where: whereClause,
+        select,
+      });
+
+      const metadata = await this.paginationService.paginate(response, {
+        page: paginationParams.page,
+        limit: paginationParams.limit,
+      });
+
+      return {
+        status: 200,
+        metadata,
+      };
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
+
+  async findOne(id: string) {
+    try {
+      let select = {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        cpf: true,
+        created_at: true,
+        deleted_at: true,
+      };
+      const response = this.prismaService.user.findFirst({
+        where: { id: id },
+        select,
+      });
+      return response;
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    try {
+      let dataToUpdate: UpdateUserData = {
+        name: updateUserDto.name,
+        email: updateUserDto.email,
+        cpf: updateUserDto.cpf,
+        phone: updateUserDto.phone,
+        role: updateUserDto.role,
+      };
+
+      if (updateUserDto.password) {
+        const salt = await bcrypt.genSalt(
+          Number(process.env.APP_PASSWORD_HASH),
+        );
+        const hash = await bcrypt.hash(updateUserDto.password, salt);
+        dataToUpdate.password = hash;
+      }
+
+      const response = await this.prismaService.user.update({
+        where: { id: id },
+        data: dataToUpdate,
+      });
+
+      return {
+        status: 200,
+        data: response,
+      };
+    } catch (error) {
+      console.error('Error updating user:', error);
+      throw new Error(error.message || 'Failed to update user');
+    }
+  }
+  async remove(id: string) {
+    try {
+      const response = await this.prismaService.user.update({
+        where: { id: id },
+        data: { deleted_at: new Date() },
+      });
+
+      return {
+        status: 200,
+        data: response,
+      };
+    } catch (error) {
+      throw new Error(error);
     }
   }
 }

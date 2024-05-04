@@ -2,9 +2,16 @@ export interface UserPayload {
   sub: string;
   email: string;
   name: string;
-  iat?: number;
-  exp?: number;
   role: string;
+  identifier: string;
   id: string;
-  cpf: string;
+  company?: {
+    id: string;
+    name: string;
+    cnpj: string;
+    address: string;
+    phone: string;
+    email: string;
+    bankDetails: string;
+  };
 }
