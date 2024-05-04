@@ -1,10 +1,22 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { UserModule } from './user/user.module';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './auth/guards/jwt.guard';
+import { AuthModule } from './auth/auth.module';
+import { MailModule } from './mail/mail.module';
+import { ControlRolesModule } from './control-roles/control-roles.module';
 
 @Module({
-  imports: [],
+  imports: [UserModule, AuthModule, MailModule, ControlRolesModule],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+  ],
 })
 export class AppModule {}

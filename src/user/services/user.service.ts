@@ -20,12 +20,12 @@ export class UserService {
   async create(createUserDto: CreateUserDto) {
     const findOneUser = await this.prismaService.user.findFirst({
       where: {
-        cpf: createUserDto.cpf,
+        OR: [{ cpf: createUserDto.cpf }, { email: createUserDto.email }],
       },
     });
     if (findOneUser) {
       throw new BadRequestException(
-        'já existe uma conta com este email ou com este username',
+        'Já existe uma conta com este email ou com este CPF.',
       );
     }
 
