@@ -1,0 +1,10 @@
+export interface UserPayload {
+  sub: string;
+  email: string;
+  name: string;
+  iat?: number;
+  exp?: number;
+  role: string;
+  id: string;
+  cpf: string;
+}
