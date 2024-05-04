@@ -44,7 +44,7 @@ export class UserService {
           password: hash,
           phone: createUserDto.phone,
           role: createUserDto.role,
-          createdAt: new Date(),
+          created_at: new Date(),
         },
       });
       return {
@@ -53,6 +53,16 @@ export class UserService {
       };
     } catch (error) {
       throw new InternalServerErrorException(error);
+    }
+  }
+
+  async findByCpf(cpf: string) {
+    try {
+      return await this.prismaService.user.findFirst({
+        where: { cpf },
+      });
+    } catch (error) {
+      throw new BadRequestException(error);
     }
   }
 }

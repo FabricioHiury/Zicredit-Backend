@@ -14,11 +14,15 @@ datasource db {
 }
 
 model User {
-  id    String  @id @default(uuid())
-  name  String
-  cpf   String
-  email String?
-  role  Roles   @default(INVESTOR)
+  id         String    @id @default(uuid())
+  name       String    @db.VarChar(255)
+  cpf        String    @db.VarChar(255)
+  email      String?   @db.VarChar(255)
+  phone      String    @db.VarChar(255)
+  role       Roles     @default(INVESTOR)
+  password   String    @db.VarChar(255)
+  created_at DateTime  @default(now())
+  deleted_at DateTime?
 }
 
 enum Roles {
