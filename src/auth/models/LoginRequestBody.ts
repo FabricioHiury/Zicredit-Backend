@@ -1,8 +1,11 @@
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString, ValidateIf } from 'class-validator';
 
 export class LoginRequestBody {
-  @IsNotEmpty({ message: 'precisa do cpf' })
-  cpf: string;
+  @IsNotEmpty({ message: 'CPF/CNPJ é obrigatório' })
+  @IsString()
+  identifier: string; 
+
+  @IsNotEmpty({ message: 'Senha é obrigatória' })
   @IsString()
   password: string;
 }

@@ -1,4 +1,4 @@
-import { User } from '@prisma/client';
+import { Company, User } from '@prisma/client';
 
 export interface UserToken {
   access_token: string;

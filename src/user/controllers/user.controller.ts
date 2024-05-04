@@ -29,6 +29,8 @@ import {
   ApiBearerAuth,
   ApiQuery,
 } from '@nestjs/swagger';
+import { PaginationParamsDto } from 'src/pagination/pagination.dto';
+import { UpdateUserDto } from '../dto/update-user.dto';
 
 @ApiTags('User')
 @Controller('user')
@@ -50,5 +52,37 @@ export class UserController {
   @ApiResponse({ status: 400, description: 'Bad Request' })
   async create(@Body() createUserDto: CreateUserDto) {
     return this.userService.create(createUserDto);
+  }
+
+  @Role('ZICREDIT', 'SELLER')
+  @Get()
+  async findAll(@Query() paginationParams: PaginationParamsDto) {
+    return this.userService.findAll(paginationParams);
+  }
+
+  @Role('ZICREDIT', 'SELLER', 'INVESTOR', 'COMPANY')
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    return this.userService.findOne(id);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Atualiza um usuário' })
+  @ApiResponse({
+    status: 200,
+    description: 'Usuário atualizado',
+    type: UpdateUserDto,
+  })
+  @ApiResponse({ status: 404, description: 'Usuário não encontrado' })
+  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+    return this.userService.update(id, updateUserDto);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Remove um usuário' })
+  @ApiResponse({ status: 200, description: 'Usuário removido' })
+  @ApiResponse({ status: 404, description: 'Usuário não encontrado' })
+  async remove(@Param('id') id: string) {
+    return this.userService.remove(id);
   }
 }

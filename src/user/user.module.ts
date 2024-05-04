@@ -9,7 +9,7 @@ import { AuthService } from 'src/auth/services/auth.service';
 // import { MailService } from 'src/mail/services/mail.service';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/database/prisma.service';
-// import { PaginationModule } from 'src/pagination/pagination.module';
+import { PaginationModule } from 'src/pagination/pagination.module';
 
 @Module({
   controllers: [UserController],
@@ -25,7 +25,7 @@ import { PrismaService } from 'src/database/prisma.service';
   imports: [
     DatabaseModule, 
     MailerModule, 
-    // PaginationModule, 
+    PaginationModule, 
   ],
   exports: [UserService]
 })

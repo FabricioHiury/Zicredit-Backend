@@ -3,5 +3,5 @@ export interface UserFromJwt {
   email: string;
   name: string;
   role: string;
-  cpf: string;
+  identifier: string;
 }
