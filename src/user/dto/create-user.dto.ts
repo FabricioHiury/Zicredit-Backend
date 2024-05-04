@@ -36,7 +36,7 @@ export class CreateUserDto {
   @IsPhoneNumber()
   phone: string;
 
-  @ApiProperty({ description: 'Cargo do usuário', example: 'RESIDENT' })
+  @ApiProperty({ description: 'Cargo do usuário', example: 'INVESTOR' })
   @IsNotEmpty({ message: 'O usuário deve ter uma cargo' })
-  role?: 'OWNER' | 'ADMIN' | 'SYNDIC' | 'CONCIERGE' | 'RESIDENT';
+  role?: 'ZICREDIT' | 'SELLER' | 'COMPANY' | 'INVESTOR';
 }

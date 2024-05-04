@@ -55,4 +55,14 @@ export class UserService {
       throw new InternalServerErrorException(error);
     }
   }
+
+  async findByCpf(cpf: string) {
+    try {
+      return await this.prismaService.user.findFirst({
+        where: { cpf },
+      });
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
+  }
 }
