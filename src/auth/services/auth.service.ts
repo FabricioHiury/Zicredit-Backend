@@ -33,7 +33,7 @@ export class AuthService {
   async validateUser(cpf: string, password: string): Promise<User> {
     const user = await this.userService.findByCpf(cpf);
 
-    if (user && !user.deletedAt) {
+    if (user && !user.deleted_at) {
       const isPasswordValid = await bcrypt.compare(password, user.password);
 
       if (isPasswordValid) {

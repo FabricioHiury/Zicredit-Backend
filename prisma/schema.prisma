@@ -18,6 +18,7 @@ model User {
   name       String    @db.VarChar(255)
   cpf        String    @db.VarChar(255)
   email      String?   @db.VarChar(255)
+  phone      String    @db.VarChar(255)
   role       Roles     @default(INVESTOR)
   password   String    @db.VarChar(255)
   created_at DateTime  @default(now())

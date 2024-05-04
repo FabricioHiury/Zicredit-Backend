@@ -44,7 +44,7 @@ export class UserService {
           password: hash,
           phone: createUserDto.phone,
           role: createUserDto.role,
-          createdAt: new Date(),
+          created_at: new Date(),
         },
       });
       return {
