@@ -45,11 +45,6 @@ export class AuthService {
     const user = await this.userService.findByIdentifier(identifier);
 
     if (user && !user.deleted_at) {
-      console.log(
-        'Comparando senha fornecida com hash:',
-        password,
-        user.password,
-      );
       const isPasswordValid = await bcrypt.compare(password, user.password);
 
       if (isPasswordValid) {

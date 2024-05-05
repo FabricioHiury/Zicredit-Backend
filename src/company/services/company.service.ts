@@ -1,10 +1,16 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { PaginationService } from 'src/pagination/pagination.service';
 import { CreateCompanyDto } from '../dto/create-company.dto';
 import { UserService } from 'src/user/services/user.service';
-import { v4 as uuid } from 'uuid';
 import * as bcrypt from 'bcrypt';
+import { PaginationParamsDto } from 'src/pagination/pagination.dto';
+import { Prisma } from '@prisma/client';
+import { UpdateCompanyDto } from '../dto/update-company.dto';
 
 @Injectable()
 export class CompanyService {
@@ -24,26 +30,177 @@ export class CompanyService {
       throw new BadRequestException('Já existe uma conta com esse cnpj');
     }
 
-    const company = await this.prismaService.company.create({
-      data: {
-        name: createCompanyDto.name,
-        cnpj: createCompanyDto.cnpj,
-        address: createCompanyDto.address,
-        phone: createCompanyDto.phone,
-        email: createCompanyDto.email,
-      },
-    });
+    try {
+      const company = await this.prismaService.company.create({
+        data: {
+          name: createCompanyDto.name,
+          cnpj: createCompanyDto.cnpj,
+          address: createCompanyDto.address,
+          phone: createCompanyDto.phone,
+          email: createCompanyDto.email,
+        },
+      });
 
-    const user = await this.userService.create({
-      name: createCompanyDto.userName,
-      email: createCompanyDto.userEmail,
-      password: createCompanyDto.userPassword,
-      cpf: createCompanyDto.userCpf,
-      phone: createCompanyDto.userPhone,
-      role: 'COMPANY',
-      companyId: company.id,
-    });
+      const user = await this.userService.create({
+        name: createCompanyDto.userName,
+        email: createCompanyDto.userEmail,
+        password: createCompanyDto.userPassword,
+        cpf: createCompanyDto.userCpf,
+        phone: createCompanyDto.userPhone,
+        role: 'COMPANY',
+        companyId: company.id,
+      });
 
-    return { company, user };
+      return { company, user };
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async findAll(paginationParams: PaginationParamsDto) {
+    try {
+      const whereClause: Prisma.CompanyWhereInput = {};
+
+      if (paginationParams.search) {
+        whereClause.OR = [
+          {
+            name: { contains: paginationParams.search, mode: 'insensitive' },
+          },
+          {
+            cnpj: { contains: paginationParams.search, mode: 'insensitive' },
+          },
+          {
+            users: {
+              some: {
+                name: {
+                  contains: paginationParams.search,
+                  mode: 'insensitive',
+                },
+              },
+            },
+          },
+        ];
+      }
+
+      const response = await this.prismaService.company.findMany({
+        where: whereClause,
+        select: {
+          id: true,
+          cnpj: true,
+          name: true,
+          email: true,
+          address: true,
+          phone: true,
+          created_at: true,
+          deleted_at: true,
+          projects: true,
+          users: true,
+        },
+      });
+
+      const metadata = await this.paginationService.paginate(response, {
+        page: paginationParams.page,
+        limit: paginationParams.limit,
+      });
+
+      return {
+        status: 200,
+        metadata,
+      };
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
+  }
+
+  async findOne(id: string) {
+    try {
+      const response = await this.prismaService.company.findFirst({
+        where: { id: id },
+        select: {
+          id: true,
+          cnpj: true,
+          name: true,
+          email: true,
+          address: true,
+          phone: true,
+          created_at: true,
+          deleted_at: true,
+          projects: true,
+          users: true,
+        },
+      });
+
+      return response;
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
+  }
+
+  async update(id: string, updateCompanyDto: UpdateCompanyDto) {
+    try {
+      const hash = await bcrypt.hash(
+        updateCompanyDto.userPassword,
+        await bcrypt.genSalt(Number(process.env.APP_PASSWORD_HASH)),
+      );
+
+      const company = await this.prismaService.company.update({
+        where: { id: id },
+        data: {
+          name: updateCompanyDto.name,
+          cnpj: updateCompanyDto.cnpj,
+          address: updateCompanyDto.address,
+          email: updateCompanyDto.email,
+          phone: updateCompanyDto.phone,
+        },
+      });
+
+      const user = await this.prismaService.user.findFirst({
+        where: { companyId: id },
+      });
+
+      if (!user) {
+        throw new Error('Nenhum usuário encontrado para esta empresa.');
+      }
+
+      const updatedUser = await this.prismaService.user.update({
+        where: { id: user.id },
+        data: {
+          name: updateCompanyDto.userName,
+          cpf: updateCompanyDto.userCpf,
+          email: updateCompanyDto.userEmail,
+          phone: updateCompanyDto.userPhone,
+          password: hash,
+        },
+      });
+
+      return { company, updatedUser };
+    } catch (error) {
+      throw new Error(error || 'Erro ao atualizar a empresa e o usuário.');
+    }
+  }
+
+  async remove(id: string) {
+    try {
+      const transaction = await this.prismaService.$transaction(
+        async (trans) => {
+          const company = await trans.company.update({
+            where: { id: id },
+            data: { deleted_at: new Date() },
+          });
+
+          const users = await trans.user.updateMany({
+            where: { companyId: id },
+            data: { deleted_at: new Date() },
+          });
+
+          return 'Companhia excluída com sucesso';
+        },
+      );
+
+      return transaction;
+    } catch (error) {
+      console.error('Error removing company and its users:', error);
+      throw new Error('Failed to remove company and its users.');
+    }
   }
 }

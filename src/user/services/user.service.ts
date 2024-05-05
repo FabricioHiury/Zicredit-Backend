@@ -61,7 +61,6 @@ export class UserService {
   }
 
   async findByIdentifier(identifier: string) {
-    console.log('Procurando usuário por identificador:', identifier);
     try {
       const user = await this.prismaService.user.findFirst({
         include: {
@@ -71,7 +70,6 @@ export class UserService {
           OR: [{ cpf: identifier }, { company: { cnpj: identifier } }],
         },
       });
-      console.log('Usuário encontrado:', user);
       return user;
     } catch (error) {
       throw new BadRequestException(error);
