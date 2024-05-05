@@ -48,6 +48,7 @@ export class UserService {
           phone: createUserDto.phone,
           role: createUserDto.role,
           created_at: new Date(),
+          companyId: createUserDto.companyId,
         },
       });
       return {
@@ -60,8 +61,9 @@ export class UserService {
   }
 
   async findByIdentifier(identifier: string) {
+    console.log('Procurando usuário por identificador:', identifier);
     try {
-      return await this.prismaService.user.findFirst({
+      const user = await this.prismaService.user.findFirst({
         include: {
           company: true,
         },
@@ -69,6 +71,8 @@ export class UserService {
           OR: [{ cpf: identifier }, { company: { cnpj: identifier } }],
         },
       });
+      console.log('Usuário encontrado:', user);
+      return user;
     } catch (error) {
       throw new BadRequestException(error);
     }
