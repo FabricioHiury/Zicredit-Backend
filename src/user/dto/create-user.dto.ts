@@ -1,6 +1,7 @@
 import {
   IsEmail,
   IsNotEmpty,
+  IsOptional,
   IsPhoneNumber,
   IsStrongPassword,
   MinLength,
@@ -37,4 +38,8 @@ export class CreateUserDto {
   @ApiProperty({ description: 'Cargo do usuário', example: 'INVESTOR' })
   @IsNotEmpty({ message: 'O usuário deve ter uma cargo' })
   role?: 'ZICREDIT' | 'SELLER' | 'COMPANY' | 'INVESTOR';
+
+  @ApiProperty({ description: 'Id da Companhia' })
+  @IsOptional()
+  companyId?: string;
 }

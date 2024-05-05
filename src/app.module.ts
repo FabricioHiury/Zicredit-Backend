@@ -7,9 +7,10 @@ import { JwtAuthGuard } from './auth/guards/jwt.guard';
 import { AuthModule } from './auth/auth.module';
 import { MailModule } from './mail/mail.module';
 import { ControlRolesModule } from './control-roles/control-roles.module';
+import { CompanyModule } from './company/company.module';
 
 @Module({
-  imports: [UserModule, AuthModule, MailModule, ControlRolesModule],
+  imports: [UserModule, AuthModule, MailModule, ControlRolesModule, CompanyModule],
   controllers: [AppController],
   providers: [
     AppService,
