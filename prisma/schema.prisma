@@ -31,27 +31,29 @@ enum Roles {
 }
 
 model Company {
-  id          String    @id @default(uuid())
-  name        String    @db.VarChar(255)
-  cnpj        String    @db.VarChar(255)
-  address     String    @db.VarChar(255)
-  phone       String    @db.VarChar(255)
-  email       String?   @db.VarChar(255)
-  created_at  DateTime  @default(now())
-  deleted_at  DateTime?
-  users       User[]
-  projects    Project[]
+  id         String    @id @default(uuid())
+  name       String    @db.VarChar(255)
+  cnpj       String    @db.VarChar(255)
+  address    String    @db.VarChar(255)
+  phone      String    @db.VarChar(255)
+  email      String?   @db.VarChar(255)
+  created_at DateTime  @default(now())
+  deleted_at DateTime?
+  users      User[]
+  projects   Project[]
 }
 
 model Investment {
-  id             String  @id @default(uuid())
+  id             String    @id @default(uuid())
   amountInvested Float
   projectId      String
   userId         String
   sellerId       String
-  user           User    @relation(name: "userInvestment", fields: [userId], references: [id])
-  seller         User    @relation(name: "userSeller", fields: [sellerId], references: [id])
-  project        Project @relation(fields: [projectId], references: [id])
+  created_at     DateTime  @default(now())
+  deleted_at     DateTime?
+  user           User      @relation(name: "userInvestment", fields: [userId], references: [id])
+  seller         User      @relation(name: "userSeller", fields: [sellerId], references: [id])
+  project        Project   @relation(fields: [projectId], references: [id])
 }
 
 model Project {
