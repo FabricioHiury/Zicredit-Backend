@@ -23,11 +23,18 @@ export class CompanyService {
   async create(createCompanyDto: CreateCompanyDto) {
     const findCompany = await this.prismaService.company.findFirst({
       where: {
-        cnpj: createCompanyDto.cnpj,
+        OR: [
+          { cnpj: createCompanyDto.cnpj },
+          { email: createCompanyDto.email },
+          { users: { some: { email: createCompanyDto.userEmail } } },
+        ],
+        deleted_at: null,
       },
     });
     if (findCompany) {
-      throw new BadRequestException('Já existe uma conta com esse cnpj');
+      throw new BadRequestException(
+        'Já existe uma conta com esse cnpj ou email',
+      );
     }
 
     try {

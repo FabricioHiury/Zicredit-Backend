@@ -24,6 +24,7 @@ export class UserService {
     const findOneUser = await this.prismaService.user.findFirst({
       where: {
         OR: [{ cpf: createUserDto.cpf }, { email: createUserDto.email }],
+        deleted_at: null,
       },
     });
     if (findOneUser) {

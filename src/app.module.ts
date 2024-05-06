@@ -8,9 +8,17 @@ import { AuthModule } from './auth/auth.module';
 import { MailModule } from './mail/mail.module';
 import { ControlRolesModule } from './control-roles/control-roles.module';
 import { CompanyModule } from './company/company.module';
+import { InvestmentModule } from './investment/investment.module';
 
 @Module({
-  imports: [UserModule, AuthModule, MailModule, ControlRolesModule, CompanyModule],
+  imports: [
+    UserModule,
+    AuthModule,
+    MailModule,
+    ControlRolesModule,
+    CompanyModule,
+    InvestmentModule,
+  ],
   controllers: [AppController],
   providers: [
     AppService,
