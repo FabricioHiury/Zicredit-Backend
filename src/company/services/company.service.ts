@@ -200,6 +200,11 @@ export class CompanyService {
             data: { deleted_at: new Date() },
           });
 
+          const project = await trans.project.updateMany({
+            where: { companyId: id },
+            data: { deleted_at: new Date() },
+          });
+
           return 'Companhia excluída com sucesso';
         },
       );

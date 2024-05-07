@@ -9,6 +9,7 @@ import { MailModule } from './mail/mail.module';
 import { ControlRolesModule } from './control-roles/control-roles.module';
 import { CompanyModule } from './company/company.module';
 import { InvestmentModule } from './investment/investment.module';
+import { ProjectModule } from './project/project.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { InvestmentModule } from './investment/investment.module';
     ControlRolesModule,
     CompanyModule,
     InvestmentModule,
+    ProjectModule,
   ],
   controllers: [AppController],
   providers: [

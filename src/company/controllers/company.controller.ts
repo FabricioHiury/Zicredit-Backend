@@ -50,6 +50,7 @@ export class CompanyController {
     return this.companyService.findOne(id);
   }
 
+  @Role('ZICREDIT', 'COMPANY')
   @Patch(':id')
   @ApiOperation({ summary: 'Atualiza a companhia' })
   @ApiResponse({
@@ -65,6 +66,7 @@ export class CompanyController {
     return this.companyService.update(id, updateCOmpanyDto);
   }
 
+  @Role('ZICREDIT', 'COMPANY')
   @Delete(':id')
   @ApiOperation({ summary: 'Remove uma companhia' })
   @ApiResponse({ status: 200, description: 'Comapanhia removida' })

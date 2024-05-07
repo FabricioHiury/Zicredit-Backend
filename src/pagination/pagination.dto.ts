@@ -39,4 +39,7 @@ export class PaginationParamsDto {
   @IsDate()
   @Transform(({ value }) => new Date(value))
   endDate?: Date;
+
+  @IsOptional()
+  isActive?: string;
 }

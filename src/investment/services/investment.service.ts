@@ -47,7 +47,32 @@ export class InvestmentService {
 
       const investments = await Promise.all(
         createInvestorDto.investments.map(async (investment) => {
-          return this.prismaService.investment.create({
+          const project = await this.prismaService.project.findUnique({
+            where: { id: investment.projectId },
+          });
+          if (!project) {
+            throw new NotFoundException('Projeto não encontrado.');
+          }
+
+          const totalInvested = await this.prismaService.investment.aggregate({
+            _sum: {
+              amountInvested: true,
+            },
+            where: {
+              projectId: investment.projectId,
+            },
+          });
+
+          const currentInvested = totalInvested._sum.amountInvested || 0;
+          const newPotentialTotal = currentInvested + investment.amountInvested;
+
+          if (newPotentialTotal > project.totalValue) {
+            throw new BadRequestException(
+              'Investimento excede o valor total do projeto.',
+            );
+          }
+
+          const createdInvestment = await this.prismaService.investment.create({
             data: {
               userId: investor.id,
               projectId: investment.projectId,
@@ -55,6 +80,17 @@ export class InvestmentService {
               sellerId: investment.sellerId || null,
             },
           });
+
+          await this.prismaService.investmentLog.create({
+            data: {
+              investmentId: createdInvestment.id,
+              amountChanged: investment.amountInvested,
+              newTotalAmount: investment.amountInvested,
+              type: 'INCREASE',
+            },
+          });
+
+          return createdInvestment;
         }),
       );
 
@@ -171,53 +207,182 @@ export class InvestmentService {
     }
   }
 
-  async update(id: string, updateInvestmentDto: UpdateInvestorDto) {
+  async findByInvestorLog(
+    investorId: string,
+    paginationParams: PaginationParamsDto,
+  ) {
+    try {
+      const whereClause: Prisma.InvestmentLogWhereInput = {};
+
+      if (paginationParams.search) {
+        const amountChanged = parseFloat(paginationParams.search);
+        if (!isNaN(amountChanged)) {
+          whereClause.amountChanged = { equals: amountChanged };
+        }
+      }
+      const response = await this.prismaService.investmentLog.findMany({
+        include: { investment: true },
+        where: { investment: { userId: investorId } },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      // Calcular o saldo total considerando INCREASE e DECREASE
+      const balance = await this.prismaService.investmentLog.aggregate({
+        _sum: {
+          amountChanged: true,
+        },
+        where: {
+          investment: { userId: investorId },
+          type: 'INCREASE',
+        },
+      });
+
+      const deductions = await this.prismaService.investmentLog.aggregate({
+        _sum: {
+          amountChanged: true,
+        },
+        where: {
+          investment: { userId: investorId },
+          type: 'DECREASE',
+        },
+      });
+
+      const totalBalance =
+        (balance._sum.amountChanged || 0) -
+        (deductions._sum.amountChanged || 0);
+
+      const metadata = await this.paginationsService.paginate(response, {
+        page: paginationParams.page,
+        limit: paginationParams.limit,
+      });
+
+      return { status: 200, metadata, balance: totalBalance };
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
+  }
+
+  async findAllByInvestorAndProjects(
+    investorId: string,
+    projectId: string,
+    paginationParams: PaginationParamsDto,
+  ) {
+    try {
+      const whereClause: Prisma.InvestmentLogWhereInput = {};
+
+      const response = await this.prismaService.investmentLog.findMany({
+        include: { investment: true },
+        where: { investment: { projectId: projectId, userId: investorId } },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      // Calculando o saldo total investido no projeto pelo investidor
+      const balance = await this.prismaService.investmentLog.aggregate({
+        _sum: {
+          amountChanged: true,
+        },
+        where: {
+          ...whereClause,
+          type: 'INCREASE',
+        },
+      });
+
+      const deductions = await this.prismaService.investmentLog.aggregate({
+        _sum: {
+          amountChanged: true,
+        },
+        where: {
+          ...whereClause,
+          type: 'DECREASE',
+        },
+      });
+
+      const totalBalance =
+        (balance._sum.amountChanged || 0) -
+        (deductions._sum.amountChanged || 0);
+
+      const metadata = await this.paginationsService.paginate(response, {
+        page: paginationParams.page,
+        limit: paginationParams.limit,
+      });
+
+      return { status: 200, metadata, balance: totalBalance };
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
+  }
+
+  async update(id: string, updateInvestorDto: UpdateInvestorDto) {
     try {
       const hash = await bcrypt.hash(
-        updateInvestmentDto.password,
+        updateInvestorDto.password,
         await bcrypt.genSalt(Number(process.env.APP_PASSWORD_HASH)),
       );
 
       const updatedInvestor = await this.prismaService.user.update({
         where: { id },
         data: {
-          name: updateInvestmentDto.name,
-          cpf: updateInvestmentDto.cpf,
-          email: updateInvestmentDto.email,
-          phone: updateInvestmentDto.phone,
+          name: updateInvestorDto.name,
+          cpf: updateInvestorDto.cpf,
+          email: updateInvestorDto.email,
+          phone: updateInvestorDto.phone,
           password: hash,
         },
       });
 
-      if (updateInvestmentDto.investment) {
-        const { investmentId, amountInvested } = updateInvestmentDto.investment;
+      if (updateInvestorDto.investment) {
+        const { investmentId, amountInvested } = updateInvestorDto.investment;
 
-        // Checar se o investimento realmente pertence ao investidor
-        const investment = await this.prismaService.investment.findFirst({
-          where: {
-            id: investmentId,
-            userId: id,
-          },
+        const investment = await this.prismaService.investment.findUnique({
+          where: { id: investmentId },
+          include: { project: true },
         });
 
-        if (!investment) {
+        if (!investment || investment.userId !== id) {
           throw new NotFoundException(
             'Investimento não encontrado ou não pertence ao usuário.',
           );
         }
 
-        // Atualizar ou remover o investimento baseado no valor fornecido
-        if (amountInvested === 0) {
-          // Remover o investimento
-          await this.prismaService.investment.delete({
-            where: { id: investmentId },
-          });
-        } else if (amountInvested > 0) {
-          // Atualizar o valor do investimento
-          const newAmount = investment.amountInvested + amountInvested;
+        const totalInvested = await this.prismaService.investment.aggregate({
+          _sum: {
+            amountInvested: true,
+          },
+          where: {
+            projectId: investment.projectId,
+            id: { not: investmentId }, // Exclui o investimento atual da soma
+          },
+        });
+
+        const currentInvested = totalInvested._sum.amountInvested || 0;
+        const newPotentialTotal = currentInvested + amountInvested;
+
+        if (newPotentialTotal > investment.project.totalValue) {
+          throw new BadRequestException(
+            'Investimento excede o valor total do projeto.',
+          );
+        }
+
+        if (amountInvested !== 0) {
           await this.prismaService.investment.update({
             where: { id: investmentId },
-            data: { amountInvested: newAmount },
+            data: { amountInvested: newPotentialTotal },
+          });
+
+          await this.prismaService.investmentLog.create({
+            data: {
+              investmentId: investmentId,
+              amountChanged: amountInvested,
+              newTotalAmount: newPotentialTotal,
+              type: amountInvested > 0 ? 'INCREASE' : 'DECREASE',
+            },
+          });
+        } else {
+          await this.prismaService.investment.update({
+            where: { id: investmentId },
+            data: {
+              deleted_at: new Date(),
+            },
           });
         }
       }
