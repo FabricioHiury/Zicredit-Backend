@@ -44,16 +44,34 @@ model Company {
 }
 
 model Investment {
-  id             String    @id @default(uuid())
+  id             String          @id @default(uuid())
   amountInvested Float
   projectId      String
   userId         String
   sellerId       String
-  created_at     DateTime  @default(now())
+  created_at     DateTime        @default(now())
   deleted_at     DateTime?
-  user           User      @relation(name: "userInvestment", fields: [userId], references: [id])
-  seller         User      @relation(name: "userSeller", fields: [sellerId], references: [id])
-  project        Project   @relation(fields: [projectId], references: [id])
+  user           User            @relation(name: "userInvestment", fields: [userId], references: [id])
+  seller         User            @relation(name: "userSeller", fields: [sellerId], references: [id])
+  project        Project         @relation(fields: [projectId], references: [id])
+  InvestmentLog  InvestmentLog[]
+}
+
+model InvestmentLog {
+  id             String     @id @default(uuid())
+  investmentId   String
+  amountChanged  Float
+  newTotalAmount Float
+  type           LogType
+  createdAt      DateTime   @default(now())
+  investment     Investment @relation(fields: [investmentId], references: [id])
+
+  @@index([investmentId], name: "idx_investment_log")
+}
+
+enum LogType {
+  INCREASE
+  DECREASE
 }
 
 model Project {
@@ -62,6 +80,8 @@ model Project {
   location    String       @db.VarChar(255)
   totalValue  Float
   companyId   String
-  company     Company      @relation(fields: [companyId], references: [id])
+  created_at  DateTime     @default(now())
+  deleted_at  DateTime?
+  company     Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
   investments Investment[]
 }

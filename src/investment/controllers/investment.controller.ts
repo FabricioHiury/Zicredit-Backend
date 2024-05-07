@@ -48,6 +48,65 @@ export class InvestmentController {
     return await this.investmentService.findOne(id);
   }
 
+  @Get(':userId')
+  @ApiOperation({ summary: 'Get a specific investor by ID' })
+  @ApiResponse({ status: 200 })
+  async findByInvestor(
+    @Param('userId') userId: string,
+    @Query() paginationParams: PaginationParamsDto,
+  ) {
+    return await this.investmentService.findByUser(userId, paginationParams);
+  }
+
+  @Get(':sellerId')
+  @ApiOperation({ summary: 'Get a specific seller by ID' })
+  @ApiResponse({ status: 200 })
+  async findBySeller(
+    @Param('sellerId') sellerId: string,
+    @Query() paginationParams: PaginationParamsDto,
+  ) {
+    return await this.investmentService.findBySeller(
+      sellerId,
+      paginationParams,
+    );
+  }
+
+  @Get('logs/investor/:investorId')
+  @ApiOperation({ summary: 'Retrieve investment logs by investor ID' })
+  @ApiResponse({ status: 200, description: 'List of investment logs' })
+  @ApiParam({ name: 'investorId', description: 'Investor ID' })
+  async findByInvestorLog(
+    @Param('investorId') investorId: string,
+    @Query() paginationParams: PaginationParamsDto,
+  ) {
+    return await this.investmentService.findByInvestorLog(
+      investorId,
+      paginationParams,
+    );
+  }
+
+  @Get('logs/investor/:investorId/project/:projectId')
+  @ApiOperation({
+    summary: 'Retrieve investment logs by investor ID and project ID',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of investment logs for specific project',
+  })
+  @ApiParam({ name: 'investorId', description: 'Investor ID' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
+  async findAllByInvestorAndProjects(
+    @Param('investorId') investorId: string,
+    @Param('projectId') projectId: string,
+    @Query() paginationParams: PaginationParamsDto,
+  ) {
+    return await this.investmentService.findAllByInvestorAndProjects(
+      investorId,
+      projectId,
+      paginationParams,
+    );
+  }
+
   @Put(':id')
   @ApiOperation({ summary: 'Update an investor and their investment' })
   @ApiResponse({ status: 200, description: 'Investor updated successfully.' })
