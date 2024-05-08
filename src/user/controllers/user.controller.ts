@@ -14,12 +14,12 @@ import {
 import { UserService } from '../services/user.service';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { IsPublic } from 'src/auth/decorators/is-public.decorator';
-//   import { RecoveryService } from 'src/mail/services/send-email-for-recovert-password.service';
 import { Role } from 'src/control-roles/decorators/roles.decorator';
 import { RolesGuard } from 'src/control-roles/guards/roleGuards';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { PaginationParamsDto } from 'src/pagination/pagination.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
+import { RecoveryService } from 'src/mail/services/send-email-for-recovert-password.service';
 
 @ApiTags('User')
 @Controller('user')
@@ -27,7 +27,7 @@ import { UpdateUserDto } from '../dto/update-user.dto';
 export class UserController {
   constructor(
     private readonly userService: UserService,
-    //   private readonly recoveryService: RecoveryService,
+    private readonly recoveryService: RecoveryService,
   ) {}
   @IsPublic()
   @Post()
@@ -41,6 +41,17 @@ export class UserController {
   @ApiResponse({ status: 400, description: 'Bad Request' })
   async create(@Body() createUserDto: CreateUserDto) {
     return this.userService.create(createUserDto);
+  }
+
+  @ApiResponse({
+    status: 200,
+    description: 'Email enviado',
+  })
+  @ApiResponse({ status: 400, description: 'Erro ao enviar o email' })
+  @Post('password-reset')
+  async requestPasswordReset(@Body('email') email: string): Promise<string> {
+    await this.recoveryService.requestPasswordReset(email);
+    return 'Email enviado com sucesso';
   }
 
   @Role('ZICREDIT', 'SELLER')

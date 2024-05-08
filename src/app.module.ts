@@ -20,6 +20,7 @@ import { ProjectModule } from './project/project.module';
     CompanyModule,
     InvestmentModule,
     ProjectModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [
