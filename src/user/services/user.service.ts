@@ -13,6 +13,7 @@ import { Prisma } from '@prisma/client';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
 import { UpdateUserData } from '../entities/user.entity';
+import { NotFoundError } from 'rxjs';
 
 @Injectable()
 export class UserService {
@@ -149,6 +150,15 @@ export class UserService {
       throw new Error(error);
     }
   }
+
+  async findByEmail(email: string) {
+    try {
+      return await this.prismaService.user.findFirst({ where: { email } });
+    } catch (error) {
+      throw new NotFoundError('não encontrado');
+    }
+  }
+
   async update(id: string, updateUserDto: UpdateUserDto) {
     try {
       let dataToUpdate: UpdateUserData = {

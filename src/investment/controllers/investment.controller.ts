@@ -107,6 +107,31 @@ export class InvestmentController {
     );
   }
 
+  @Get('sellers')
+  async findSeller(@Query() paginationParams: PaginationParamsDto) {
+    return await this.investmentService.findSellers(paginationParams);
+  }
+
+  @Get('total-by-project/:projectId')
+  async getTotalInvestedByProjectId(@Param('projectId') projectId: string) {
+    const total =
+      await this.investmentService.getTotalInvestedByProjectId(projectId);
+    return { projectId, totalInvested: total };
+  }
+
+  @Get('total-by-company/:companyId')
+  async getTotalInvestedByCompanyId(@Param('companyId') companyId: string) {
+    const total =
+      await this.investmentService.getTotalInvestedByCompanyId(companyId);
+    return { companyId, totalInvested: total };
+  }
+
+  @Get('total-invested-overall')
+  async getTotalInvestedOverall() {
+    const total = await this.investmentService.getTotalInvestedOverall();
+    return { totalInvested: total };
+  }
+
   @Put(':id')
   @ApiOperation({ summary: 'Update an investor and their investment' })
   @ApiResponse({ status: 200, description: 'Investor updated successfully.' })

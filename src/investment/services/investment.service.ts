@@ -207,6 +207,38 @@ export class InvestmentService {
     }
   }
 
+  async findSellers(paginationParams: PaginationParamsDto) {
+    try {
+      const whereClause: Prisma.InvestmentWhereInput = {};
+      if (paginationParams.search) {
+        whereClause.OR = [
+          {
+            seller: {
+              name: { contains: paginationParams.search, mode: 'insensitive' },
+              cpf: { contains: paginationParams.search, mode: 'insensitive' },
+              email: { contains: paginationParams.search, mode: 'insensitive' },
+            },
+          },
+        ];
+      }
+      const response = await this.prismaService.investment.findMany({
+        where: whereClause,
+        select: {
+          seller: true,
+        },
+      });
+
+      const metadata = await this.paginationsService.paginate(response, {
+        page: paginationParams.page,
+        limit: paginationParams.limit,
+      });
+
+      return { status: 200, metadata };
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
+  }
+
   async findByInvestorLog(
     investorId: string,
     paginationParams: PaginationParamsDto,
@@ -309,6 +341,103 @@ export class InvestmentService {
       return { status: 200, metadata, balance: totalBalance };
     } catch (error) {
       throw new BadRequestException(error);
+    }
+  }
+
+  async getTotalInvestedByProjectId(projectId: string) {
+    try {
+      const increases = await this.prismaService.investmentLog.aggregate({
+        _sum: {
+          amountChanged: true,
+        },
+        where: {
+          investment: { projectId: projectId },
+          type: 'INCREASE',
+        },
+      });
+
+      const decreases = await this.prismaService.investmentLog.aggregate({
+        _sum: {
+          amountChanged: true,
+        },
+        where: {
+          investment: { projectId: projectId },
+          type: 'DECREASE',
+        },
+      });
+
+      const totalInvested =
+        (increases._sum.amountChanged || 0) -
+        (decreases._sum.amountChanged || 0);
+      return totalInvested;
+    } catch (error) {
+      throw new BadRequestException(
+        'Erro ao calcular o total investido por projeto: ' + error.message,
+      );
+    }
+  }
+
+  async getTotalInvestedByCompanyId(companyId: string) {
+    try {
+      const increases = await this.prismaService.investmentLog.aggregate({
+        _sum: {
+          amountChanged: true,
+        },
+        where: {
+          investment: { project: { companyId: companyId } },
+          type: 'INCREASE',
+        },
+      });
+
+      const decreases = await this.prismaService.investmentLog.aggregate({
+        _sum: {
+          amountChanged: true,
+        },
+        where: {
+          investment: { project: { companyId: companyId } },
+          type: 'DECREASE',
+        },
+      });
+
+      const totalInvested =
+        (increases._sum.amountChanged || 0) -
+        (decreases._sum.amountChanged || 0);
+      return totalInvested;
+    } catch (error) {
+      throw new BadRequestException(
+        'Erro ao calcular o total investido por companhia: ' + error.message,
+      );
+    }
+  }
+
+  async getTotalInvestedOverall() {
+    try {
+      const increases = await this.prismaService.investmentLog.aggregate({
+        _sum: {
+          amountChanged: true,
+        },
+        where: {
+          type: 'INCREASE',
+        },
+      });
+
+      const decreases = await this.prismaService.investmentLog.aggregate({
+        _sum: {
+          amountChanged: true,
+        },
+        where: {
+          type: 'DECREASE',
+        },
+      });
+
+      const totalInvested =
+        (increases._sum.amountChanged || 0) -
+        (decreases._sum.amountChanged || 0);
+      return totalInvested;
+    } catch (error) {
+      throw new BadRequestException(
+        'Erro ao calcular o total investido geral: ' + error.message,
+      );
     }
   }
 
