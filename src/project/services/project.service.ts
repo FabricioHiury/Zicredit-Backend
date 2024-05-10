@@ -55,16 +55,32 @@ export class ProjectService {
         },
       });
 
-      await Promise.all(
-        createProjectDto.sellerId.map((sellerId) => {
-          return this.prismaService.projectSeller.create({
-            data: {
-              projectId: project.id,
-              sellerId: sellerId,
-            },
-          });
-        }),
-      );
+      if (createProjectDto.sellerId && createProjectDto.sellerId.length > 0) {
+        await Promise.all(
+          createProjectDto.sellerId.map((sellerId) => {
+            return this.prismaService.projectSeller.create({
+              data: {
+                projectId: project.id,
+                sellerId: sellerId,
+              },
+            });
+          }),
+        );
+      }
+
+      if (createProjectDto.images && createProjectDto.images.length > 0) {
+        await Promise.all(
+          createProjectDto.images.map(async (image) => {
+            const imageUrl = await this.uploadService.uploadBase64Image(image);
+            await this.prismaService.projectImages.create({
+              data: {
+                images: imageUrl,
+                projectId: project.id,
+              },
+            });
+          }),
+        );
+      }
 
       let reportUrl = null;
       if (pdfFile) {
@@ -260,6 +276,20 @@ export class ProjectService {
               data: {
                 projectId: id,
                 sellerId: sellerId,
+              },
+            });
+          }),
+        );
+      }
+
+      if (updateProjectDto.images && updateProjectDto.images.length > 0) {
+        await Promise.all(
+          updateProjectDto.images.map(async (image) => {
+            const imageUrl = await this.uploadService.uploadBase64Image(image);
+            await this.prismaService.projectImages.create({
+              data: {
+                images: imageUrl,
+                projectId: id,
               },
             });
           }),

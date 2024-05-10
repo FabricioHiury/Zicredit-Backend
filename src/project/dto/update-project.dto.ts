@@ -25,4 +25,9 @@ export class UpdateProjectDto {
   @IsUUID(4, { message: 'O ID do vendedor deve ser um UUID válido' })
   @IsArray()
   sellerId?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  images?: string[];
 }

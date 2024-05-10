@@ -92,6 +92,7 @@ model Project {
   investments   Investment[]
   ProjectSeller ProjectSeller[]
   Report        Report[]
+  ProjectImages ProjectImages[]
 }
 
 model ProjectSeller {
@@ -102,6 +103,14 @@ model ProjectSeller {
   seller  User    @relation(name: "sellerProject", fields: [sellerId], references: [id], onDelete: Cascade)
 
   @@id([projectId, sellerId])
+}
+
+model ProjectImages {
+  id         String   @id @default(uuid())
+  projectId  String
+  images     String   @db.Text
+  created_at DateTime @default(now())
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 model Report {
