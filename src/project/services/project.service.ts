@@ -187,6 +187,9 @@ export class ProjectService {
         return total + investmentTotal;
       }, 0);
 
+      // calcula quanto falta ser vendido
+      const amountRemaining = project.totalValue - totalInvested;
+
       // calcula a distribuição mensal para os aumentos
       const monthlyDistribution = project.investments.reduce(
         (total, investment) => {
@@ -204,6 +207,7 @@ export class ProjectService {
       return {
         ...project,
         totalInvested,
+        amountRemaining,
         monthlyDistribution,
       };
     } catch (error) {
