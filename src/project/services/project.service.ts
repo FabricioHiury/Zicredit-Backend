@@ -55,6 +55,17 @@ export class ProjectService {
         },
       });
 
+      await Promise.all(
+        createProjectDto.sellerId.map((sellerId) => {
+          return this.prismaService.projectSeller.create({
+            data: {
+              projectId: project.id,
+              sellerId: sellerId,
+            },
+          });
+        }),
+      );
+
       let reportUrl = null;
       if (pdfFile) {
         reportUrl = await this.uploadService.uploadReport(project.id, pdfFile);
@@ -217,6 +228,24 @@ export class ProjectService {
         where: { id },
         data: updateProjectDto,
       });
+
+      await this.prismaService.projectSeller.deleteMany({
+        where: { projectId: id },
+      });
+
+      // Vincular novos vendedores, se algum foi fornecido
+      if (updateProjectDto.sellerId && updateProjectDto.sellerId.length > 0) {
+        await Promise.all(
+          updateProjectDto.sellerId.map((sellerId) => {
+            return this.prismaService.projectSeller.create({
+              data: {
+                projectId: id,
+                sellerId: sellerId,
+              },
+            });
+          }),
+        );
+      }
 
       return updatedProject;
     } catch (error) {

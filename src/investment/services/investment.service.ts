@@ -17,6 +17,21 @@ export class InvestmentService {
     private readonly prismaService: PrismaService,
     private readonly paginationsService: PaginationService,
   ) {}
+
+  private calculateAppreciation(amount: number): number {
+    if (amount <= 250000) {
+      return 1.25;
+    } else if (amount <= 500000) {
+      return 1.5;
+    } else if (amount <= 750000) {
+      return 1.75;
+    } else if (amount <= 1000000) {
+      return 2.0;
+    } else {
+      return 2.5;
+    }
+  }
+
   async create(createInvestorDto: CreateInvestorDto) {
     const findOneUser = await this.prismaService.user.findFirst({
       where: {
@@ -78,7 +93,10 @@ export class InvestmentService {
               projectId: investment.projectId,
               amountInvested: investment.amountInvested,
               bankData: investment.bankData,
-              sellerId: investment.sellerId,
+              sellerId: investment.sellerId || null,
+              appreciation: this.calculateAppreciation(
+                investment.amountInvested,
+              ),
             },
           });
 
@@ -489,6 +507,7 @@ export class InvestmentService {
         const investmentDataUpdate: any = {
           amountInvested,
           sellerId,
+          appreciation: this.calculateAppreciation(amountInvested),
         };
 
         if (amountInvested !== 0) {
