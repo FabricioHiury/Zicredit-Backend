@@ -187,9 +187,24 @@ export class ProjectService {
         return total + investmentTotal;
       }, 0);
 
+      // calcula a distribuição mensal para os aumentos
+      const monthlyDistribution = project.investments.reduce(
+        (total, investment) => {
+          const monthlyTotal = investment.InvestmentLog.reduce((acc, log) => {
+            if (log.type === 'INCREASE') {
+              return acc + log.amountChanged * 0.03; // 3% do investimento total naquele empreendimento
+            }
+            return acc;
+          }, 0);
+          return total + monthlyTotal;
+        },
+        0,
+      );
+
       return {
         ...project,
         totalInvested,
+        monthlyDistribution,
       };
     } catch (error) {
       throw new BadRequestException(error);
