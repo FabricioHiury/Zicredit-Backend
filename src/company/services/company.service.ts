@@ -11,6 +11,7 @@ import * as bcrypt from 'bcrypt';
 import { PaginationParamsDto } from 'src/pagination/pagination.dto';
 import { Prisma } from '@prisma/client';
 import { UpdateCompanyDto } from '../dto/update-company.dto';
+import { UploadService } from 'src/Upload/upload.service';
 
 @Injectable()
 export class CompanyService {
@@ -18,6 +19,7 @@ export class CompanyService {
     private readonly prismaService: PrismaService,
     private readonly userService: UserService,
     private readonly paginationService: PaginationService,
+    private readonly uploadService: UploadService,
   ) {}
 
   async create(createCompanyDto: CreateCompanyDto) {
@@ -38,6 +40,13 @@ export class CompanyService {
     }
 
     try {
+      let logoUrl = null; // Local para armazenar a URL da logo após o upload
+      if (createCompanyDto.logo) {
+        logoUrl = await this.uploadService.uploadBase64Image(
+          createCompanyDto.logo,
+        );
+      }
+
       const company = await this.prismaService.company.create({
         data: {
           name: createCompanyDto.name,
@@ -45,6 +54,8 @@ export class CompanyService {
           address: createCompanyDto.address,
           phone: createCompanyDto.phone,
           email: createCompanyDto.email,
+          logo: logoUrl,
+          bankData: createCompanyDto.bankData,
         },
       });
 
@@ -145,6 +156,15 @@ export class CompanyService {
 
   async update(id: string, updateCompanyDto: UpdateCompanyDto) {
     try {
+      let logoUrl = updateCompanyDto.logo; // Assume que logo já está na forma de uma URL ou Base64
+      if (
+        updateCompanyDto.logo &&
+        updateCompanyDto.logo.startsWith('data:image')
+      ) {
+        const base64Data = updateCompanyDto.logo.split(',')[1];
+        logoUrl = await this.uploadService.uploadBase64Image(base64Data);
+      }
+
       const hash = await bcrypt.hash(
         updateCompanyDto.userPassword,
         await bcrypt.genSalt(Number(process.env.APP_PASSWORD_HASH)),
@@ -158,6 +178,8 @@ export class CompanyService {
           address: updateCompanyDto.address,
           email: updateCompanyDto.email,
           phone: updateCompanyDto.phone,
+          bankData: updateCompanyDto.bankData,
+          logo: logoUrl, 
         },
       });
 
@@ -182,7 +204,9 @@ export class CompanyService {
 
       return { company, updatedUser };
     } catch (error) {
-      throw new Error(error || 'Erro ao atualizar a empresa e o usuário.');
+      throw new Error(
+        error.message || 'Erro ao atualizar a empresa e o usuário.',
+      );
     }
   }
 

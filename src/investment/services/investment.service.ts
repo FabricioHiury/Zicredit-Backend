@@ -77,7 +77,8 @@ export class InvestmentService {
               userId: investor.id,
               projectId: investment.projectId,
               amountInvested: investment.amountInvested,
-              sellerId: investment.sellerId || null,
+              bankData: investment.bankData,
+              sellerId: investment.sellerId,
             },
           });
 
@@ -443,25 +444,31 @@ export class InvestmentService {
 
   async update(id: string, updateInvestorDto: UpdateInvestorDto) {
     try {
-      const hash = await bcrypt.hash(
-        updateInvestorDto.password,
-        await bcrypt.genSalt(Number(process.env.APP_PASSWORD_HASH)),
-      );
+      // Atualizando os dados do usuário, incluindo a senha se for fornecida
+      const userDataUpdate: any = {
+        name: updateInvestorDto.name,
+        cpf: updateInvestorDto.cpf,
+        email: updateInvestorDto.email,
+        phone: updateInvestorDto.phone,
+        bankData: updateInvestorDto.investment?.bankData,
+      };
+
+      if (updateInvestorDto.password) {
+        userDataUpdate.password = await bcrypt.hash(
+          updateInvestorDto.password,
+          await bcrypt.genSalt(Number(process.env.APP_PASSWORD_HASH)),
+        );
+      }
 
       const updatedInvestor = await this.prismaService.user.update({
         where: { id },
-        data: {
-          name: updateInvestorDto.name,
-          cpf: updateInvestorDto.cpf,
-          email: updateInvestorDto.email,
-          phone: updateInvestorDto.phone,
-          password: hash,
-        },
+        data: userDataUpdate,
       });
 
+      // Atualizando o investimento, se fornecido
       if (updateInvestorDto.investment) {
-        const { investmentId, amountInvested } = updateInvestorDto.investment;
-
+        const { investmentId, amountInvested, sellerId } =
+          updateInvestorDto.investment;
         const investment = await this.prismaService.investment.findUnique({
           where: { id: investmentId },
           include: { project: true },
@@ -473,40 +480,44 @@ export class InvestmentService {
           );
         }
 
-        const totalInvested = await this.prismaService.investment.aggregate({
-          _sum: {
-            amountInvested: true,
-          },
-          where: {
-            projectId: investment.projectId,
-            id: { not: investmentId }, // Exclui o investimento atual da soma
-          },
-        });
-
-        const currentInvested = totalInvested._sum.amountInvested || 0;
-        const newPotentialTotal = currentInvested + amountInvested;
-
-        if (newPotentialTotal > investment.project.totalValue) {
+        if (amountInvested > investment.project.totalValue) {
           throw new BadRequestException(
             'Investimento excede o valor total do projeto.',
           );
         }
 
+        const investmentDataUpdate: any = {
+          amountInvested,
+          sellerId,
+        };
+
         if (amountInvested !== 0) {
           await this.prismaService.investment.update({
             where: { id: investmentId },
-            data: { amountInvested: newPotentialTotal },
+            data: investmentDataUpdate,
           });
 
           await this.prismaService.investmentLog.create({
             data: {
               investmentId: investmentId,
-              amountChanged: amountInvested,
-              newTotalAmount: newPotentialTotal,
-              type: amountInvested > 0 ? 'INCREASE' : 'DECREASE',
+              amountChanged: amountInvested - investment.amountInvested,
+              newTotalAmount: amountInvested,
+              type:
+                amountInvested > investment.amountInvested
+                  ? 'INCREASE'
+                  : 'DECREASE',
             },
           });
         } else {
+          await this.prismaService.investmentLog.create({
+            data: {
+              investmentId: investmentId,
+              amountChanged: -investment.amountInvested,
+              newTotalAmount: 0,
+              type: 'DECREASE',
+            },
+          });
+
           await this.prismaService.investment.update({
             where: { id: investmentId },
             data: {

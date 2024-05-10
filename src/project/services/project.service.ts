@@ -10,14 +10,20 @@ import { CreateProjectDto } from '../dto/create-project.dto';
 import { PaginationParamsDto } from 'src/pagination/pagination.dto';
 import { Prisma } from '@prisma/client';
 import { UpdateProjectDto } from '../dto/update-project.dto';
+import { UploadService } from 'src/Upload/upload.service';
 
 @Injectable()
 export class ProjectService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly paginationService: PaginationService,
+    private readonly uploadService: UploadService,
   ) {}
-  async create(createProjectDto: CreateProjectDto) {
+  async create(
+    createProjectDto: CreateProjectDto,
+    base64: string,
+    pdfFile: Express.Multer.File,
+  ) {
     const findOneProject = await this.prismaService.project.findFirst({
       where: {
         companyId: createProjectDto.companyId,
@@ -28,20 +34,31 @@ export class ProjectService {
 
     if (findOneProject) {
       throw new BadRequestException(
-        'Já existe  um projeto vinculado a essa empresa com esse nome',
+        'Já existe um projeto vinculado a essa empresa com esse nome',
       );
     }
 
     try {
+      let coverUrl = null;
+      if (base64) {
+        coverUrl = await this.uploadService.uploadBase64Image(base64);
+      }
+
       const project = await this.prismaService.project.create({
         data: {
           name: createProjectDto.name,
           location: createProjectDto.location,
+          cover: coverUrl,
           companyId: createProjectDto.companyId,
           totalValue: createProjectDto.totalValue,
           created_at: new Date(),
         },
       });
+
+      let reportUrl = null;
+      if (pdfFile) {
+        reportUrl = await this.uploadService.uploadReport(project.id, pdfFile);
+      }
 
       return project;
     } catch (error) {
@@ -168,7 +185,12 @@ export class ProjectService {
     }
   }
 
-  async update(id: string, updateProjectDto: UpdateProjectDto) {
+  async update(
+    id: string,
+    updateProjectDto: UpdateProjectDto,
+    base64?: string,
+    pdfFile?: Express.Multer.File,
+  ) {
     try {
       const existingProject = await this.prismaService.project.findUnique({
         where: { id: id },
@@ -178,7 +200,19 @@ export class ProjectService {
         throw new NotFoundException(`Projeto não encontrado.`);
       }
 
-      // Atualize o projeto com os dados fornecidos
+      let coverUrl = existingProject.cover;
+      if (base64) {
+        coverUrl = await this.uploadService.uploadBase64Image(base64);
+        updateProjectDto.cover = coverUrl;
+      }
+
+      if (pdfFile) {
+        const report = await this.uploadService.uploadReport(
+          existingProject.id,
+          pdfFile,
+        );
+      }
+
       const updatedProject = await this.prismaService.project.update({
         where: { id },
         data: updateProjectDto,
@@ -191,7 +225,7 @@ export class ProjectService {
           'Falha na atualização do projeto devido a restrições do banco de dados.',
         );
       }
-      throw new BadRequestException(
+      throw new InternalServerErrorException(
         'Erro na atualização do projeto: ' + error.message,
       );
     }
