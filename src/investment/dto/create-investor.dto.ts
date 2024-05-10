@@ -24,6 +24,10 @@ class ProjectInvestmentDto {
   @IsOptional()
   @IsUUID(4, { message: 'O ID do vendedor deve ser um UUID válido' })
   sellerId?: string;
+
+  @IsNotEmpty({ message: 'Dados bancários são obrigatório' })
+  @IsString()
+  bankData: string;
 }
 
 export class CreateInvestorDto {

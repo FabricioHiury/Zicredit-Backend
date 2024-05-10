@@ -10,9 +10,11 @@ import { ControlRolesModule } from './control-roles/control-roles.module';
 import { CompanyModule } from './company/company.module';
 import { InvestmentModule } from './investment/investment.module';
 import { ProjectModule } from './project/project.module';
+import { DatabaseModule } from './database/database.module';
 
 @Module({
   imports: [
+    DatabaseModule,
     UserModule,
     AuthModule,
     MailModule,

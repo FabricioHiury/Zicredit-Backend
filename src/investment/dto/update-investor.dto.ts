@@ -22,6 +22,15 @@ class UpdateInvestmentDto {
       'O valor investido deve ser zero para remover o investimento ou maior que zero para adicionar',
   })
   amountInvested?: number;
+
+  @IsOptional()
+  @IsUUID(4, { message: 'O ID do vendedor deve ser um UUID válido' })
+  sellerId?: string;
+
+  @IsOptional()
+  @IsNotEmpty({ message: 'Dados bancários são obrigatório' })
+  @IsString()
+  bankData: string;
 }
 
 export class UpdateInvestorDto {

@@ -16,4 +16,8 @@ export class UpdateProjectDto {
   @IsOptional()
   @IsUUID()
   companyId?: string;
+
+  @IsOptional()
+  @IsString()
+  cover?: string;
 }

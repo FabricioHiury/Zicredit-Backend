@@ -1,4 +1,11 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsPhoneNumber, IsString, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsPhoneNumber,
+  IsString,
+  MinLength,
+} from 'class-validator';
 
 export class CreateCompanyDto {
   @IsNotEmpty({ message: 'O nome da empresa é obrigatório' })
@@ -13,6 +20,14 @@ export class CreateCompanyDto {
   @IsNotEmpty({ message: 'O endereço é obrigatório' })
   @IsString({ message: 'O endereço deve ser uma string' })
   address: string;
+
+  @IsNotEmpty({ message: 'Os dados bancários são obrigatórios' })
+  @IsString({ message: 'Os dados bancários devem ser uma string' })
+  bankData: string;
+
+  @IsOptional()
+  @IsString()
+  logo?: string;
 
   @IsNotEmpty({ message: 'O telefone é obrigatório' })
   @IsString({ message: 'O telefone deve ser uma string' })

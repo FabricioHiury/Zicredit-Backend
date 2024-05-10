@@ -1,5 +1,6 @@
 import {
   IsEmail,
+  IsNotEmpty,
   IsOptional,
   IsPhoneNumber,
   IsString,
@@ -19,6 +20,15 @@ export class UpdateCompanyDto {
   @IsOptional()
   @IsString({ message: 'O endereço deve ser uma string' })
   address?: string;
+
+  @IsOptional()
+  @IsNotEmpty({ message: 'Os dados bancários são obrigatórios' })
+  @IsString({ message: 'Os dados bancários devem ser uma string' })
+  bankData: string;
+
+  @IsOptional()
+  @IsString()
+  logo?: string;
 
   @IsOptional()
   @IsString({ message: 'O telefone deve ser uma string' })

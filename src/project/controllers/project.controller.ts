@@ -27,8 +27,12 @@ export class ProjectController {
     description: 'Projeto criado',
     type: CreateProjectDto,
   })
-  async create(@Body() createProjectDto: CreateProjectDto) {
-    return await this.projectService.create(createProjectDto);
+  async create(
+    @Body() createProjectDto: CreateProjectDto,
+    base64: string,
+    pdfFile: Express.Multer.File,
+  ) {
+    return await this.projectService.create(createProjectDto, base64, pdfFile);
   }
 
   @Get()
@@ -52,8 +56,15 @@ export class ProjectController {
   async update(
     @Param('id') id: string,
     @Body() updateProjectDto: UpdateProjectDto,
+    pdfFile?: Express.Multer.File,
+    base64?: string,
   ) {
-    return await this.projectService.update(id, updateProjectDto);
+    return await this.projectService.update(
+      id,
+      updateProjectDto,
+      base64,
+      pdfFile,
+    );
   }
 
   @Role('ZICREDIT', 'COMPANY')

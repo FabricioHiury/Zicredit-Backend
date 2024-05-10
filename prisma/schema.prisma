@@ -8,19 +8,20 @@ datasource db {
 }
 
 model User {
-  id          String       @id @default(uuid())
-  name        String       @db.VarChar(255)
-  cpf         String       @unique @db.VarChar(255)
-  email       String?      @db.VarChar(255)
-  phone       String       @db.VarChar(255)
-  role        Roles        @default(INVESTOR)
-  password    String       @db.VarChar(255)
-  created_at  DateTime     @default(now())
+  id          String          @id @default(uuid())
+  name        String          @db.VarChar(255)
+  cpf         String          @unique @db.VarChar(255)
+  email       String?         @db.VarChar(255)
+  phone       String          @db.VarChar(255)
+  role        Roles           @default(INVESTOR)
+  password    String          @db.VarChar(255)
+  created_at  DateTime        @default(now())
   deleted_at  DateTime?
   companyId   String?
-  company     Company?     @relation(fields: [companyId], references: [id], onDelete: SetNull)
-  investments Investment[] @relation("userInvestment")
-  sales       Investment[] @relation("userSeller")
+  company     Company?        @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  investments Investment[]    @relation("userInvestment")
+  sales       Investment[]    @relation("userSeller")
+  projects    ProjectSeller[] @relation("sellerProject")
 }
 
 enum Roles {
@@ -34,9 +35,11 @@ model Company {
   id         String    @id @default(uuid())
   name       String    @db.VarChar(255)
   cnpj       String    @db.VarChar(255)
-  address    String    @db.VarChar(255)
+  address    String    @db.Text
   phone      String    @db.VarChar(255)
   email      String?   @db.VarChar(255)
+  bankData   String    @db.Text
+  logo       String    @db.Text
   created_at DateTime  @default(now())
   deleted_at DateTime?
   users      User[]
@@ -49,6 +52,7 @@ model Investment {
   projectId      String
   userId         String
   sellerId       String
+  bankData       String          @db.Text
   created_at     DateTime        @default(now())
   deleted_at     DateTime?
   user           User            @relation(name: "userInvestment", fields: [userId], references: [id])
@@ -75,13 +79,35 @@ enum LogType {
 }
 
 model Project {
-  id          String       @id @default(uuid())
-  name        String       @db.VarChar(255)
-  location    String       @db.VarChar(255)
-  totalValue  Float
-  companyId   String
-  created_at  DateTime     @default(now())
-  deleted_at  DateTime?
-  company     Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  investments Investment[]
+  id            String          @id @default(uuid())
+  name          String          @db.VarChar(255)
+  location      String          @db.VarChar(255)
+  totalValue    Float
+  cover         String          @db.Text
+  address       String          @db.Text
+  companyId     String
+  created_at    DateTime        @default(now())
+  deleted_at    DateTime?
+  company       Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  investments   Investment[]
+  ProjectSeller ProjectSeller[]
+  Report        Report[]
+}
+
+model ProjectSeller {
+  projectId String
+  sellerId  String
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  seller  User    @relation(name: "sellerProject", fields: [sellerId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, sellerId])
+}
+
+model Report {
+  id         String   @id @default(uuid())
+  file       String   @db.Text
+  projectId  String
+  created_at DateTime @default(now())
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
