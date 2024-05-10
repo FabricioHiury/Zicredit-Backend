@@ -53,6 +53,7 @@ model Investment {
   userId         String
   sellerId       String
   bankData       String          @db.Text
+  appreciation   Float           @default(0)
   created_at     DateTime        @default(now())
   deleted_at     DateTime?
   user           User            @relation(name: "userInvestment", fields: [userId], references: [id])
@@ -81,10 +82,9 @@ enum LogType {
 model Project {
   id            String          @id @default(uuid())
   name          String          @db.VarChar(255)
-  location      String          @db.VarChar(255)
+  location      String          @db.Text
   totalValue    Float
   cover         String          @db.Text
-  address       String          @db.Text
   companyId     String
   created_at    DateTime        @default(now())
   deleted_at    DateTime?

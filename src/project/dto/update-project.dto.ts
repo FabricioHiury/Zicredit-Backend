@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsNumber, IsUUID } from 'class-validator';
+import { IsOptional, IsString, IsNumber, IsUUID, IsArray } from 'class-validator';
 
 export class UpdateProjectDto {
   @IsOptional()
@@ -20,4 +20,9 @@ export class UpdateProjectDto {
   @IsOptional()
   @IsString()
   cover?: string;
+
+  @IsOptional()
+  @IsUUID(4, { message: 'O ID do vendedor deve ser um UUID válido' })
+  @IsArray()
+  sellerId?: string[];
 }
