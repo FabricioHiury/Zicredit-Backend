@@ -156,7 +156,7 @@ export class CompanyService {
 
   async update(id: string, updateCompanyDto: UpdateCompanyDto) {
     try {
-      let logoUrl = updateCompanyDto.logo; // Assume que logo já está na forma de uma URL ou Base64
+      let logoUrl = updateCompanyDto.logo; 
       if (
         updateCompanyDto.logo &&
         updateCompanyDto.logo.startsWith('data:image')

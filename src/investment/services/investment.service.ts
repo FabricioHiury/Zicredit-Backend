@@ -452,7 +452,11 @@ export class InvestmentService {
       const totalInvested =
         (increases._sum.amountChanged || 0) -
         (decreases._sum.amountChanged || 0);
-      return totalInvested;
+
+      // Calculando o rendimento total com base em 3% do total investido
+      const totalYield = totalInvested * 0.03;
+
+      return { totalInvested, totalYield };
     } catch (error) {
       throw new BadRequestException(
         'Erro ao calcular o total investido geral: ' + error.message,
