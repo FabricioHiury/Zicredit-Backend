@@ -48,7 +48,7 @@ export class InvestmentController {
     return await this.investmentService.findOne(id);
   }
 
-  @Get(':userId')
+  @Get('investor/:userId')
   @ApiOperation({ summary: 'Get a specific investor by ID' })
   @ApiResponse({ status: 200 })
   async findByInvestor(
@@ -58,7 +58,7 @@ export class InvestmentController {
     return await this.investmentService.findByUser(userId, paginationParams);
   }
 
-  @Get(':sellerId')
+  @Get('seller/:sellerId')
   @ApiOperation({ summary: 'Get a specific seller by ID' })
   @ApiResponse({ status: 200 })
   async findBySeller(

@@ -49,13 +49,17 @@ export class InvestmentService {
     }
 
     try {
+      const hash = await bcrypt.hash(
+        createInvestorDto.password,
+        await bcrypt.genSalt(Number(process.env.APP_PASSWORD_HASH)),
+      );
       const investor = await this.prismaService.user.create({
         data: {
           name: createInvestorDto.name,
           cpf: createInvestorDto.cpf,
           email: createInvestorDto.email,
           phone: createInvestorDto.phone,
-          password: createInvestorDto.password,
+          password: hash,
           role: 'INVESTOR',
         },
       });
