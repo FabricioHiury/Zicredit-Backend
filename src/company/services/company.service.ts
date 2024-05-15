@@ -40,7 +40,7 @@ export class CompanyService {
     }
 
     try {
-      let logoUrl = null; // Local para armazenar a URL da logo após o upload
+      let logoUrl = null; 
       if (createCompanyDto.logo) {
         logoUrl = await this.uploadService.uploadBase64Image(
           createCompanyDto.logo,
@@ -71,6 +71,7 @@ export class CompanyService {
 
       return { company, user };
     } catch (error) {
+      console.error(error)
       throw new InternalServerErrorException(error);
     }
   }
