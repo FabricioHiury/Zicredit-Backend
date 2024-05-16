@@ -5,8 +5,8 @@ import {
   Body,
   Param,
   Delete,
-  Put,
   Query,
+  Patch,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -108,31 +108,42 @@ export class InvestmentController {
   }
 
   @Get('sellers')
+  @ApiOperation({ summary: 'Retrieve all sellers' })
+  @ApiResponse({ status: 200, description: 'List of sellers' })
   async findSeller(@Query() paginationParams: PaginationParamsDto) {
     return await this.investmentService.findSellers(paginationParams);
   }
 
-  @Get('total-by-project/:projectId')
+  @Post('total-by-project/:projectId')
+  @ApiOperation({ summary: 'Get total invested by project ID' })
+  @ApiResponse({ status: 200, description: 'Total invested in the project' })
+  @ApiParam({ name: 'projectId', description: 'Project ID' })
   async getTotalInvestedByProjectId(@Param('projectId') projectId: string) {
     const total =
       await this.investmentService.getTotalInvestedByProjectId(projectId);
     return { projectId, totalInvested: total };
   }
 
-  @Get('total-by-company/:companyId')
+  @Post('total-by-company/:companyId')
+  @ApiOperation({ summary: 'Get total invested by company ID' })
+  @ApiResponse({ status: 200, description: 'Total invested in the company' })
+  @ApiParam({ name: 'companyId', description: 'Company ID' })
   async getTotalInvestedByCompanyId(@Param('companyId') companyId: string) {
     const total =
       await this.investmentService.getTotalInvestedByCompanyId(companyId);
     return { companyId, totalInvested: total };
   }
 
-  @Get('total-invested-overall')
+  @Post('total-invested-overall')
+  @ApiOperation({ summary: 'Get total invested overall' })
+  @ApiResponse({ status: 200, description: 'Total invested overall' })
   async getTotalInvestedOverall() {
-    const total = await this.investmentService.getTotalInvestedOverall();
-    return { totalInvested: total };
+    const { totalInvested, totalYield } =
+      await this.investmentService.getTotalInvestedOverall();
+    return { totalInvested, totalYield };
   }
 
-  @Put(':id')
+  @Patch(':id')
   @ApiOperation({ summary: 'Update an investor and their investment' })
   @ApiResponse({ status: 200, description: 'Investor updated successfully.' })
   @ApiBody({ type: UpdateInvestorDto })

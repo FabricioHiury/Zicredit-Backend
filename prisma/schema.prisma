@@ -39,7 +39,7 @@ model Company {
   phone      String    @db.VarChar(255)
   email      String?   @db.VarChar(255)
   bankData   String    @db.Text
-  logo       String    @db.Text
+  logo       String?   @db.Text
   created_at DateTime  @default(now())
   deleted_at DateTime?
   users      User[]
@@ -84,7 +84,7 @@ model Project {
   name          String          @db.VarChar(255)
   location      String          @db.Text
   totalValue    Float
-  cover         String          @db.Text
+  cover         String?         @db.Text
   companyId     String
   created_at    DateTime        @default(now())
   deleted_at    DateTime?

@@ -42,4 +42,7 @@ export class PaginationParamsDto {
 
   @IsOptional()
   isActive?: string;
+
+  @IsOptional()
+  typeUser?: string;
 }

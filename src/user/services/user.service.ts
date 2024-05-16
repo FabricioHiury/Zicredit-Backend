@@ -9,7 +9,7 @@ import { v4 as uuid } from 'uuid';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { PaginationService } from 'src/pagination/pagination.service';
 import { PaginationParamsDto } from 'src/pagination/pagination.dto';
-import { Prisma } from '@prisma/client';
+import { Prisma, Roles } from '@prisma/client';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
 import { UpdateUserData } from '../entities/user.entity';
@@ -108,6 +108,11 @@ export class UserService {
             name: { startsWith: paginationParams.search, mode: 'insensitive' },
           },
         ];
+      }
+
+      if (paginationParams.typeUser) {
+        const role: Roles = paginationParams.typeUser.toUpperCase() as Roles;
+        whereClause.role = role;
       }
 
       response = await this.prismaService.user.findMany({
