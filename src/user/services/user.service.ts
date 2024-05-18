@@ -156,6 +156,71 @@ export class UserService {
     }
   }
 
+  async findSellerId(id: string) {
+    try {
+      const response = await this.prismaService.user.findFirst({
+        where: { id: id },
+        include: {
+          sales: {
+            include: {
+              InvestmentLog: true,
+              project: true,
+            },
+          },
+          projects: {
+            include: {
+              project: true,
+            },
+          },
+        },
+      });
+
+      let totalInvestment = 0;
+      const projectInvestmentMap = new Map();
+
+      response.sales.forEach((sale) => {
+        sale.InvestmentLog.forEach((log) => {
+          if (log.type === 'INCREASE') {
+            totalInvestment += log.amountChanged;
+
+            if (projectInvestmentMap.has(sale.project.id)) {
+              projectInvestmentMap.set(
+                sale.project.id,
+                projectInvestmentMap.get(sale.project.id) + log.amountChanged,
+              );
+            } else {
+              projectInvestmentMap.set(sale.project.id, log.amountChanged);
+            }
+          }
+        });
+      });
+
+      const projectInvestments = [];
+      for (const [projectId, amount] of projectInvestmentMap.entries()) {
+        const project = response.projects.find(
+          (p) => p.project.id === projectId,
+        );
+        if (project) {
+          projectInvestments.push({
+            projectName: project.project.name,
+            amount: amount,
+          });
+        }
+      }
+
+      const totalCommission = totalInvestment * 0.02;
+
+      return {
+        name: response.name,
+        totalInvestment,
+        totalCommission,
+        projectInvestments,
+      };
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
+  }
+
   async findByEmail(email: string) {
     try {
       return await this.prismaService.user.findFirst({ where: { email } });
