@@ -194,18 +194,44 @@ export class InvestmentService {
 
   async findByUser(userId: string, paginationParams: PaginationParamsDto) {
     try {
-      const response = await this.prismaService.investment.findMany({
+      const investments = await this.prismaService.investment.findMany({
         where: {
           userId: userId,
         },
+        include: {
+          InvestmentLog: true,
+          project: true,
+          seller: true,
+          user: true,
+        },
       });
 
-      const metadata = await this.paginationsService.paginate(response, {
-        page: paginationParams.page,
-        limit: paginationParams.limit,
+      let totalInvested = 0;
+      let totalMonthlyYield = 0;
+
+      investments.forEach((investment) => {
+        const { InvestmentLog, appreciation, amountInvested } = investment;
+        let investmentTotal = 0;
+
+        InvestmentLog.forEach((log) => {
+          if (log.type === 'INCREASE') {
+            investmentTotal += log.amountChanged;
+          } else if (log.type === 'DECREASE') {
+            investmentTotal -= log.amountChanged;
+          }
+        });
+
+        totalInvested += investmentTotal;
+        totalMonthlyYield += investmentTotal * appreciation;
       });
 
-      return { status: 200, metadata };
+      const response = {
+        investments,
+        totalInvested,
+        totalMonthlyYield,
+      };
+
+      return { status: 200, response };
     } catch (error) {
       throw new BadRequestException(error);
     }

@@ -40,7 +40,7 @@ export class CompanyService {
     }
 
     try {
-      let logoUrl = null; 
+      let logoUrl = null;
       if (createCompanyDto.logo) {
         logoUrl = await this.uploadService.uploadBase64Image(
           createCompanyDto.logo,
@@ -71,7 +71,7 @@ export class CompanyService {
 
       return { company, user };
     } catch (error) {
-      console.error(error)
+      console.error(error);
       throw new InternalServerErrorException(error);
     }
   }
@@ -144,12 +144,57 @@ export class CompanyService {
           phone: true,
           created_at: true,
           deleted_at: true,
-          projects: true,
+          projects: {
+            select: {
+              id: true,
+              name: true,
+              totalValue: true,
+              investments: {
+                select: {
+                  id: true,
+                  InvestmentLog: {
+                    select: {
+                      amountChanged: true,
+                      type: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
           users: true,
         },
       });
 
-      return response;
+      // Calculate total invested in the company
+      let totalInvested = 0;
+      let totalValueSold = 0;
+
+      response.projects.forEach((project) => {
+        project.investments.forEach((investment) => {
+          investment.InvestmentLog.forEach((log) => {
+            if (log.type === 'INCREASE') {
+              totalInvested += log.amountChanged;
+            } else if (log.type === 'DECREASE') {
+              totalInvested -= log.amountChanged;
+            }
+          });
+        });
+        totalValueSold += project.totalValue;
+      });
+
+      // Calculate the total value remaining to be sold
+      const totalRemaining = totalValueSold - totalInvested;
+
+      // Calculate 3% yield on total invested
+      const totalYield = totalInvested * 0.03;
+
+      return {
+        ...response,
+        totalInvested,
+        totalRemaining,
+        totalYield,
+      };
     } catch (error) {
       throw new BadRequestException(error);
     }
@@ -157,7 +202,7 @@ export class CompanyService {
 
   async update(id: string, updateCompanyDto: UpdateCompanyDto) {
     try {
-      let logoUrl = updateCompanyDto.logo; 
+      let logoUrl = updateCompanyDto.logo;
       if (
         updateCompanyDto.logo &&
         updateCompanyDto.logo.startsWith('data:image')
@@ -180,7 +225,7 @@ export class CompanyService {
           email: updateCompanyDto.email,
           phone: updateCompanyDto.phone,
           bankData: updateCompanyDto.bankData,
-          logo: logoUrl, 
+          logo: logoUrl,
         },
       });
 

@@ -66,6 +66,11 @@ export class UserController {
     return this.userService.findOne(id);
   }
 
+  @Role('ZICREDIT', 'SELLER')
+  @Get('seller/:id')
+  async findSellerId(@Param('id') id: string) {
+    return this.userService.findSellerId(id);
+  }
   @Patch(':id')
   @ApiOperation({ summary: 'Atualiza um usuário' })
   @ApiResponse({
