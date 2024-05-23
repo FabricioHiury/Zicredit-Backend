@@ -494,6 +494,25 @@ export class InvestmentService {
     }
   }
 
+  async getInvestorsCountByCompanyId(companyId: string) {
+    try {
+      const investorsCount = await this.prismaService.investment.count({
+        where: {
+          project: {
+            companyId: companyId,
+          },
+        },
+      });
+
+      return { investorsCount };
+    } catch (error) {
+      throw new BadRequestException(
+        'Erro ao calcular o total de investidores por companhia: ' +
+          error.message,
+      );
+    }
+  }
+
   async update(id: string, updateInvestorDto: UpdateInvestorDto) {
     try {
       // Atualizando os dados do usuário, incluindo a senha se for fornecida

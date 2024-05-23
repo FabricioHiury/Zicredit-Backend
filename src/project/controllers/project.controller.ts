@@ -45,6 +45,13 @@ export class ProjectController {
     return await this.projectService.findOne(id);
   }
 
+  @Get('active-projects-count/:companyId')
+  async getActiveProjectsCountByCompanyId(
+    @Param('companyId') companyId: string,
+  ) {
+    return this.projectService.getActiveProjectsCountByCompanyId(companyId);
+  }
+
   @Role('ZICREDIT', 'COMPANY')
   @Patch(':id')
   @ApiOperation({ summary: 'Atualiza o projeto' })
