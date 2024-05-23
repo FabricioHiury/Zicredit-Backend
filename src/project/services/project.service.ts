@@ -231,6 +231,24 @@ export class ProjectService {
     }
   }
 
+  async getActiveProjectsCountByCompanyId(companyId: string) {
+    try {
+      const projectsCount = await this.prismaService.project.count({
+        where: {
+          companyId: companyId,
+          deleted_at: null,
+        },
+      });
+
+      return { projectsCount };
+    } catch (error) {
+      throw new BadRequestException(
+        'Erro ao calcular o total de projetos ativos por companhia: ' +
+          error.message,
+      );
+    }
+  }
+
   async update(
     id: string,
     updateProjectDto: UpdateProjectDto,
