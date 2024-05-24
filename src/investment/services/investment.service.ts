@@ -426,6 +426,42 @@ export class InvestmentService {
     }
   }
 
+  async findInvestorsByCompanyId(
+    companyId: string,
+    paginationParams: PaginationParamsDto,
+  ) {
+    try {
+      const whereClause: Prisma.InvestmentWhereInput = {
+        project: { companyId: companyId },
+      };
+
+      const investments = await this.prismaService.investment.findMany({
+        where: whereClause,
+        include: {
+          user: true,
+        },
+      });
+
+      const investors = investments.map((investment) => investment.user);
+      const uniqueInvestors = Array.from(
+        new Set(investors.map((i) => i.id)),
+      ).map((id) => {
+        return investors.find((i) => i.id === id);
+      });
+
+      const metadata = await this.paginationsService.paginate(uniqueInvestors, {
+        page: paginationParams.page,
+        limit: paginationParams.limit,
+      });
+
+      return { status: 200, metadata };
+    } catch (error) {
+      throw new BadRequestException(
+        'Erro ao listar investidores por companhia: ' + error.message,
+      );
+    }
+  }
+
   async getTotalInvestedByCompanyId(companyId: string) {
     try {
       const increases = await this.prismaService.investmentLog.aggregate({

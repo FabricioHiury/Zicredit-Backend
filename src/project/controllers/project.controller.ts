@@ -52,6 +52,17 @@ export class ProjectController {
     return this.projectService.getActiveProjectsCountByCompanyId(companyId);
   }
 
+  @Get('projects-by-company/:companyId')
+  async getProjectsByCompanyId(
+    @Param('companyId') companyId: string,
+    @Query() paginationParams: PaginationParamsDto,
+  ) {
+    return this.projectService.findProjectsByCompanyId(
+      companyId,
+      paginationParams,
+    );
+  }
+
   @Role('ZICREDIT', 'COMPANY')
   @Patch(':id')
   @ApiOperation({ summary: 'Atualiza o projeto' })

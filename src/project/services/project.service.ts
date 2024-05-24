@@ -249,6 +249,28 @@ export class ProjectService {
     }
   }
 
+  async findProjectsByCompanyId(
+    companyId: string,
+    paginationParams: PaginationParamsDto,
+  ) {
+    try {
+      const projects = await this.prismaService.project.findMany({
+        where: { companyId: companyId },
+      });
+
+      const metadata = await this.paginationService.paginate(projects, {
+        page: paginationParams.page,
+        limit: paginationParams.limit,
+      });
+
+      return { status: 200, metadata };
+    } catch (error) {
+      throw new BadRequestException(
+        'Erro ao listar projetos por companhia: ' + error.message,
+      );
+    }
+  }
+
   async update(
     id: string,
     updateProjectDto: UpdateProjectDto,

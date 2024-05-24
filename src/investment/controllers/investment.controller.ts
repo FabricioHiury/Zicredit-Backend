@@ -148,6 +148,17 @@ export class InvestmentController {
     return this.investmentService.getInvestorsCountByCompanyId(companyId);
   }
 
+  @Get('investors-by-company/:companyId')
+  async getInvestorsByCompanyId(
+    @Param('companyId') companyId: string,
+    @Query() paginationParams: PaginationParamsDto,
+  ) {
+    return this.investmentService.findInvestorsByCompanyId(
+      companyId,
+      paginationParams,
+    );
+  }
+
   @Patch(':id')
   @ApiOperation({ summary: 'Update an investor and their investment' })
   @ApiResponse({ status: 200, description: 'Investor updated successfully.' })
