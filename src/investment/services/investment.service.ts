@@ -209,8 +209,9 @@ export class InvestmentService {
       let totalInvested = 0;
       let totalMonthlyYield = 0;
 
+      // Calculate totalInvested and totalMonthlyYield
       investments.forEach((investment) => {
-        const { InvestmentLog, appreciation, amountInvested } = investment;
+        const { InvestmentLog, appreciation } = investment;
         let investmentTotal = 0;
 
         InvestmentLog.forEach((log) => {
@@ -222,11 +223,37 @@ export class InvestmentService {
         });
 
         totalInvested += investmentTotal;
-        totalMonthlyYield += investmentTotal * appreciation;
+        const monthlyAppreciation = appreciation / 12; // Calcular a apreciação mensal
+        totalMonthlyYield += investmentTotal * monthlyAppreciation;
       });
 
+      // Round totalMonthlyYield to 2 decimal places
+      totalMonthlyYield = Number(totalMonthlyYield.toFixed(2));
+
+      // Add percentage of totalInvested to each investment and sort by amountInvested
+      const sortedInvestments = investments
+        .map((investment) => {
+          const { InvestmentLog } = investment;
+          let investmentTotal = 0;
+
+          InvestmentLog.forEach((log) => {
+            if (log.type === 'INCREASE') {
+              investmentTotal += log.amountChanged;
+            } else if (log.type === 'DECREASE') {
+              investmentTotal -= log.amountChanged;
+            }
+          });
+
+          return {
+            ...investment,
+            amountInvested: investmentTotal,
+            percentageOfTotal: (investmentTotal / totalInvested) * 100,
+          };
+        })
+        .sort((a, b) => b.amountInvested - a.amountInvested);
+
       const response = {
-        investments,
+        investments: sortedInvestments,
         totalInvested,
         totalMonthlyYield,
       };
