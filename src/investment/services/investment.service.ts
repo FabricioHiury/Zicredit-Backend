@@ -426,28 +426,49 @@ export class InvestmentService {
     }
   }
 
-  async findInvestorsByCompanyId(
+  async findInvestorsByCompanyAndUserId(
     companyId: string,
+    userId: string | null,
     paginationParams: PaginationParamsDto,
   ) {
     try {
       const whereClause: Prisma.InvestmentWhereInput = {
-        project: { companyId: companyId },
+        project: { companyId },
+        ...(userId && { userId }), // Conditionally add userId to the filter if it's provided
       };
 
       const investments = await this.prismaService.investment.findMany({
         where: whereClause,
         include: {
           user: true,
+          project: true,
         },
       });
 
-      const investors = investments.map((investment) => investment.user);
-      const uniqueInvestors = Array.from(
-        new Set(investors.map((i) => i.id)),
-      ).map((id) => {
-        return investors.find((i) => i.id === id);
+      const investorsMap = new Map<string, any>();
+
+      investments.forEach((investment) => {
+        const investorId = investment.userId;
+        const projectId = investment.projectId;
+
+        if (!investorsMap.has(investorId)) {
+          investorsMap.set(investorId, {
+            ...investment.user,
+            totalInvested: 0,
+            investments: [],
+          });
+        }
+
+        const investor = investorsMap.get(investorId);
+        investor.totalInvested += investment.amountInvested;
+        investor.investments.push({
+          projectId: projectId,
+          projectName: investment.project.name,
+          amountInvested: investment.amountInvested,
+        });
       });
+
+      const uniqueInvestors = Array.from(investorsMap.values());
 
       const metadata = await this.paginationsService.paginate(uniqueInvestors, {
         page: paginationParams.page,

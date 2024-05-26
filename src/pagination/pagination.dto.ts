@@ -45,4 +45,8 @@ export class PaginationParamsDto {
 
   @IsOptional()
   typeUser?: string;
+
+  @IsOptional()
+  @IsString()
+  userId?: string;
 }

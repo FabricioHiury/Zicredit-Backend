@@ -153,8 +153,9 @@ export class InvestmentController {
     @Param('companyId') companyId: string,
     @Query() paginationParams: PaginationParamsDto,
   ) {
-    return this.investmentService.findInvestorsByCompanyId(
+    return this.investmentService.findInvestorsByCompanyAndUserId(
       companyId,
+      paginationParams.userId,
       paginationParams,
     );
   }
