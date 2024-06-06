@@ -110,6 +110,8 @@ export class CompanyService {
           email: true,
           address: true,
           phone: true,
+          logo: true,
+          bankData: true,
           created_at: true,
           deleted_at: true,
           projects: true,
@@ -142,6 +144,8 @@ export class CompanyService {
           email: true,
           address: true,
           phone: true,
+          logo: true,
+          bankData: true,
           created_at: true,
           deleted_at: true,
           projects: {
