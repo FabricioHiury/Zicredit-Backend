@@ -10,7 +10,8 @@ export class UploadService {
   private bucketName: string;
 
   constructor(private readonly prismaService: PrismaService) {
-    this.storage = new Storage();
+    const keyfileJson = JSON.parse(process.env.GCS_KEYFILE_JSON);
+    this.storage = new Storage({ credentials: keyfileJson });
     this.bucketName = process.env.GCS_BUCKET_NAME; // Nome do bucket configurado nas variáveis de ambiente
   }
 
@@ -19,7 +20,6 @@ export class UploadService {
     const filename = `${uuidv4()}.png`; // Gera um nome único para o arquivo
     const file = bucket.file(filename);
 
-    // Remove o prefixo da string Base64 e converte para Buffer
     const buffer = Buffer.from(
       base64.replace(/^data:image\/\w+;base64,/, ''),
       'base64',
@@ -43,20 +43,13 @@ export class UploadService {
         .pipe(stream)
         .on('error', reject)
         .on('finish', () => {
-          // Configura o arquivo como público (se necessário) e obtém a URL pública
-          file
-            .makePublic()
-            .then(() => {
-              resolve(
-                `https://storage.googleapis.com/${this.bucketName}/${filename}`,
-              );
-            })
-            .catch(reject);
+          resolve(
+            `https://storage.googleapis.com/${this.bucketName}/${filename}`,
+          );
         });
     });
   }
 
-  // Função para fazer o upload de um PDF para o Google Cloud Storage
   private async uploadPdfToStorage(file: Express.Multer.File): Promise<string> {
     const fileName = `pdfs/${uuidv4()}-${file.originalname}`;
     const bucket = this.storage.bucket(this.bucketName);
