@@ -21,8 +21,9 @@ export class ProjectService {
   ) {}
   async create(
     createProjectDto: CreateProjectDto,
-    base64: string,
+    cover: Express.Multer.File,
     pdfFile: Express.Multer.File,
+    imageFiles: Express.Multer.File[],
   ) {
     const findOneProject = await this.prismaService.project.findFirst({
       where: {
@@ -40,8 +41,8 @@ export class ProjectService {
 
     try {
       let coverUrl = null;
-      if (base64) {
-        coverUrl = await this.uploadService.uploadBase64Image(base64);
+      if (cover) {
+        coverUrl = await this.uploadService.uploadImage(cover);
       }
 
       const project = await this.prismaService.project.create({
@@ -68,10 +69,10 @@ export class ProjectService {
         );
       }
 
-      if (createProjectDto.images && createProjectDto.images.length > 0) {
+      if (imageFiles && imageFiles.length > 0) {
         await Promise.all(
-          createProjectDto.images.map(async (image) => {
-            const imageUrl = await this.uploadService.uploadBase64Image(image);
+          imageFiles.map(async (image) => {
+            const imageUrl = await this.uploadService.uploadImage(image);
             await this.prismaService.projectImages.create({
               data: {
                 images: imageUrl,
@@ -85,6 +86,15 @@ export class ProjectService {
       let reportUrl = null;
       if (pdfFile) {
         reportUrl = await this.uploadService.uploadReport(project.id, pdfFile);
+      }
+
+      if (reportUrl) {
+        await this.prismaService.report.create({
+          data: {
+            file: reportUrl,
+            projectId: project.id,
+          },
+        });
       }
 
       return project;
@@ -183,6 +193,18 @@ export class ProjectService {
               InvestmentLog: true,
             },
           },
+          ProjectFiles: {
+            orderBy: {
+              created_at: 'desc',
+            },
+            take: 1,
+          },
+          ProjectImages: {
+            orderBy: {
+              created_at: 'desc',
+            },
+            take: 1,
+          },
         },
       });
 
@@ -190,7 +212,23 @@ export class ProjectService {
         throw new NotFoundException('Projeto não encontrado.');
       }
 
-      // total investido baseado nos logs de investimento
+      // Obter a data da imagem mais recente
+      const latestImageDate = project.ProjectImages.length
+        ? project.ProjectImages[0].created_at
+        : null;
+
+      // Buscar todas as imagens com a mesma data de criação
+      let recentImages = [];
+      if (latestImageDate) {
+        recentImages = await this.prismaService.projectImages.findMany({
+          where: {
+            projectId: id,
+            created_at: latestImageDate,
+          },
+        });
+      }
+
+      // Total investido baseado nos logs de investimento
       const totalInvested = project.investments.reduce((total, investment) => {
         const investmentTotal = investment.InvestmentLog.reduce((acc, log) => {
           if (log.type === 'INCREASE') {
@@ -203,10 +241,10 @@ export class ProjectService {
         return total + investmentTotal;
       }, 0);
 
-      // calcula quanto falta ser vendido
+      // Calcula quanto falta ser vendido
       const amountRemaining = project.totalValue - totalInvested;
 
-      // calcula a distribuição mensal para os aumentos
+      // Calcula a distribuição mensal para os aumentos
       const monthlyDistribution = project.investments.reduce(
         (total, investment) => {
           const monthlyTotal = investment.InvestmentLog.reduce((acc, log) => {
@@ -220,11 +258,21 @@ export class ProjectService {
         0,
       );
 
+      const lastFile = project.ProjectFiles.length
+        ? project.ProjectFiles[0]
+        : null;
+
+      // Desestruturar o project para excluir ProjectFiles e ProjectImages
+      const { ProjectFiles, ProjectImages, ...projectWithoutFilesAndImages } =
+        project;
+
       return {
-        ...project,
+        ...projectWithoutFilesAndImages,
         totalInvested,
         amountRemaining,
         monthlyDistribution,
+        lastFile,
+        recentImages,
       };
     } catch (error) {
       throw new BadRequestException(error);

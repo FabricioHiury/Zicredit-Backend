@@ -7,6 +7,9 @@ import {
   Param,
   Query,
   Patch,
+  UseInterceptors,
+  UploadedFile,
+  UploadedFiles,
 } from '@nestjs/common';
 import { ProjectService } from '../services/project.service';
 import { CreateProjectDto } from '../dto/create-project.dto';
@@ -14,6 +17,7 @@ import { UpdateProjectDto } from '../dto/update-project.dto';
 import { PaginationParamsDto } from 'src/pagination/pagination.dto';
 import { Role } from 'src/control-roles/decorators/roles.decorator';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('projects')
 export class ProjectController {
@@ -27,12 +31,19 @@ export class ProjectController {
     description: 'Projeto criado',
     type: CreateProjectDto,
   })
+  @UseInterceptors(FileInterceptor('pdfFile'))
   async create(
     @Body() createProjectDto: CreateProjectDto,
-    base64: string,
-    pdfFile: Express.Multer.File,
+    @UploadedFile('cover') cover: Express.Multer.File,
+    @UploadedFiles() imageFiles: Express.Multer.File[],
+    @UploadedFile('pdfFile') pdfFile: Express.Multer.File,
   ) {
-    return await this.projectService.create(createProjectDto, base64, pdfFile);
+    return await this.projectService.create(
+      createProjectDto,
+      cover,
+      pdfFile,
+      imageFiles,
+    );
   }
 
   @Get()
