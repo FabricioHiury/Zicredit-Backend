@@ -50,6 +50,25 @@ export class UploadService {
     });
   }
 
+  async uploadImage(file: Express.Multer.File): Promise<string> {
+    const fileName = `images/${uuidv4()}-${file.originalname}`;
+    const bucket = this.storage.bucket(this.bucketName);
+    const fileHandle = bucket.file(fileName);
+    const stream = fileHandle.createWriteStream({
+      metadata: {
+        contentType: file.mimetype,
+      },
+    });
+
+    await new Promise((resolve, reject) => {
+      stream.on('error', reject);
+      stream.on('finish', resolve);
+      stream.end(file.buffer);
+    });
+
+    return fileHandle.publicUrl();
+  }
+
   private async uploadPdfToStorage(file: Express.Multer.File): Promise<string> {
     const fileName = `pdfs/${uuidv4()}-${file.originalname}`;
     const bucket = this.storage.bucket(this.bucketName);
@@ -69,7 +88,10 @@ export class UploadService {
     return fileHandle.publicUrl();
   }
 
-  async uploadReport(projectId: string, file: Express.Multer.File) {
+  async uploadReport(
+    projectId: string,
+    file: Express.Multer.File,
+  ): Promise<string> {
     const reportUrl = await this.uploadPdfToStorage(file);
 
     const report = await this.prismaService.report.create({
@@ -79,15 +101,6 @@ export class UploadService {
       },
     });
 
-    return report;
-  }
-
-  async getLatestReportForProject(projectId: string) {
-    const latestReport = await this.prismaService.report.findFirst({
-      where: { projectId },
-      orderBy: { created_at: 'desc' },
-    });
-
-    return latestReport;
+    return report.file;
   }
 }

@@ -51,13 +51,13 @@ model Investment {
   amountInvested Float
   projectId      String
   userId         String
-  sellerId       String
+  sellerId       String?
   bankData       String          @db.Text
   appreciation   Float           @default(0)
   created_at     DateTime        @default(now())
   deleted_at     DateTime?
   user           User            @relation(name: "userInvestment", fields: [userId], references: [id])
-  seller         User            @relation(name: "userSeller", fields: [sellerId], references: [id])
+  seller         User?           @relation(name: "userSeller", fields: [sellerId], references: [id])
   project        Project         @relation(fields: [projectId], references: [id])
   InvestmentLog  InvestmentLog[]
 }
@@ -93,6 +93,7 @@ model Project {
   ProjectSeller ProjectSeller[]
   Report        Report[]
   ProjectImages ProjectImages[]
+  ProjectFiles  ProjectFiles[]
 }
 
 model ProjectSeller {
@@ -109,6 +110,14 @@ model ProjectImages {
   id         String   @id @default(uuid())
   projectId  String
   images     String   @db.Text
+  created_at DateTime @default(now())
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model ProjectFiles {
+  id         String   @id @default(uuid())
+  projectId  String
+  file       String   @db.Text
   created_at DateTime @default(now())
   project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
