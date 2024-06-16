@@ -1,3 +1,4 @@
+import { Transform } from 'class-transformer';
 import {
   IsNotEmpty,
   IsString,
@@ -18,6 +19,7 @@ export class CreateProjectDto {
 
   @IsNotEmpty()
   @IsNumber()
+  @Transform(({ value }) => parseFloat(value))
   totalValue: number;
 
   @IsNotEmpty()
