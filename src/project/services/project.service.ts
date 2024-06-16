@@ -85,16 +85,16 @@ export class ProjectService {
 
       let reportUrl = null;
       if (pdfFile) {
-        reportUrl = await this.uploadService.uploadReport(project.id, pdfFile);
-      }
+        reportUrl = await this.uploadService.uploadReport(pdfFile);
 
-      if (reportUrl) {
-        await this.prismaService.report.create({
-          data: {
-            file: reportUrl,
-            projectId: project.id,
-          },
-        });
+        if (reportUrl) {
+          await this.prismaService.report.create({
+            data: {
+              file: reportUrl,
+              projectId: project.id,
+            },
+          });
+        }
       }
 
       return project;
@@ -193,7 +193,7 @@ export class ProjectService {
               InvestmentLog: true,
             },
           },
-          ProjectFiles: {
+          Report: {
             orderBy: {
               created_at: 'desc',
             },
@@ -258,12 +258,10 @@ export class ProjectService {
         0,
       );
 
-      const lastFile = project.ProjectFiles.length
-        ? project.ProjectFiles[0]
-        : null;
+      const lastFile = project.Report.length ? project.Report[0] : null;
 
       // Desestruturar o project para excluir ProjectFiles e ProjectImages
-      const { ProjectFiles, ProjectImages, ...projectWithoutFilesAndImages } =
+      const { Report, ProjectImages, ...projectWithoutFilesAndImages } =
         project;
 
       return {
@@ -341,10 +339,7 @@ export class ProjectService {
       }
 
       if (pdfFile) {
-        const report = await this.uploadService.uploadReport(
-          existingProject.id,
-          pdfFile,
-        );
+        const report = await this.uploadService.uploadReport(pdfFile);
       }
 
       const updatedProject = await this.prismaService.project.update({

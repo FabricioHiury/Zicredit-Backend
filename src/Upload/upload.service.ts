@@ -88,19 +88,8 @@ export class UploadService {
     return fileHandle.publicUrl();
   }
 
-  async uploadReport(
-    projectId: string,
-    file: Express.Multer.File,
-  ): Promise<string> {
+  async uploadReport(file: Express.Multer.File): Promise<string> {
     const reportUrl = await this.uploadPdfToStorage(file);
-
-    const report = await this.prismaService.report.create({
-      data: {
-        file: reportUrl,
-        projectId,
-      },
-    });
-
-    return report.file;
+    return reportUrl;
   }
 }
