@@ -93,7 +93,6 @@ model Project {
   ProjectSeller ProjectSeller[]
   Report        Report[]
   ProjectImages ProjectImages[]
-  ProjectFiles  ProjectFiles[]
 }
 
 model ProjectSeller {
@@ -110,14 +109,6 @@ model ProjectImages {
   id         String   @id @default(uuid())
   projectId  String
   images     String   @db.Text
-  created_at DateTime @default(now())
-  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-}
-
-model ProjectFiles {
-  id         String   @id @default(uuid())
-  projectId  String
-  file       String   @db.Text
   created_at DateTime @default(now())
   project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
