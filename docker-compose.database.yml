@@ -5,12 +5,11 @@ services:
     container_name: zicredit_database
     image: postgres:15-alpine3.16
     env_file:
-      
-.env
-  environment:
-    POSTGRES_USER: ${DATABASE_USER}
-    POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
-    POSTGRES_DB: ${DATABASE_NAME}
-  ports:
-${DATABASE_EXPOSE_PORT}:${DATABASE_PORT}
-command: -c logging_collector=off
+      - .env
+    environment:
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+    ports:
+      - "${DATABASE_EXPOSE_PORT}:${DATABASE_PORT}"
+    command: -c logging_collector=off
