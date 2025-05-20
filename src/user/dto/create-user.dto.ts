@@ -1,8 +1,10 @@
 import {
   IsEmail,
   IsNotEmpty,
+  IsOptional,
   IsPhoneNumber,
   IsStrongPassword,
+  MinLength,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -13,6 +15,7 @@ export class CreateUserDto {
 
   @ApiProperty({ description: 'Cpf do usuário' })
   @IsNotEmpty({ message: 'Deve conter cpf' })
+  @MinLength(11)
   cpf: string;
 
   @ApiProperty({ description: 'Email do usuário' })
@@ -20,23 +23,23 @@ export class CreateUserDto {
   @IsEmail()
   email: string;
 
-  @ApiProperty({ description: 'Senha do usuário' })
-  @IsNotEmpty({ message: 'Deve conter senha' })
-  @IsStrongPassword({
-    minLength: 8,
-    minLowercase: 1,
-    minNumbers: 1,
-    minUppercase: 1,
-    minSymbols: 1,
+  @ApiProperty({
+    description: 'Senha do usuário, deve conter pelo menos 8 caracteres',
   })
+  @IsNotEmpty({ message: 'Deve conter senha' })
+  @MinLength(8)
   password: string;
 
   @ApiProperty({ description: 'Telefone do usuário' })
   @IsNotEmpty({ message: 'Deve conter phone' })
-  @IsPhoneNumber()
+  @IsPhoneNumber('BR')
   phone: string;
 
   @ApiProperty({ description: 'Cargo do usuário', example: 'INVESTOR' })
   @IsNotEmpty({ message: 'O usuário deve ter uma cargo' })
   role?: 'ZICREDIT' | 'SELLER' | 'COMPANY' | 'INVESTOR';
+
+  @ApiProperty({ description: 'Id da Companhia' })
+  @IsOptional()
+  companyId?: string;
 }

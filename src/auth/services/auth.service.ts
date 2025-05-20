@@ -20,8 +20,19 @@ export class AuthService {
       email: user.email,
       name: user.name,
       role: user.role,
-      cpf: user.cpf,
+      identifier: user.cpf || user.cnpj,
       id: user.id.toString(),
+      company: user.company
+        ? {
+            id: user.company.id,
+            name: user.company.name,
+            cnpj: user.company.cnpj,
+            address: user.company.address,
+            phone: user.company.phone,
+            email: user.company.email,
+            bankDetails: user.company.bankDetails,
+          }
+        : null,
     };
 
     return {
@@ -30,8 +41,8 @@ export class AuthService {
     };
   }
 
-  async validateUser(cpf: string, password: string): Promise<User> {
-    const user = await this.userService.findByCpf(cpf);
+  async validateUser(identifier: string, password: string): Promise<User> {
+    const user = await this.userService.findByIdentifier(identifier);
 
     if (user && !user.deleted_at) {
       const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -45,6 +56,6 @@ export class AuthService {
       }
     }
 
-    throw new UnauthorizedError('username or password provided is incorrect.');
+    throw new UnauthorizedError('cpf/cnpj or password provided is incorrect.');
   }
 }

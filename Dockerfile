@@ -1,4 +1,4 @@
-Stage de desenvolvimento
+# Stage de desenvolvimento
 FROM node:18.2 AS development
 
 ENV NODE_ENV=development
@@ -16,7 +16,7 @@ EXPOSE 80
 CMD ["npm", "run", "start:dev"]
 
 
-Stage de produção
+# Stage de produção
 FROM node:18.2 AS production
 
 ENV NODE_ENV=production
