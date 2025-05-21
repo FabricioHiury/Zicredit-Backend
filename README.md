@@ -1,19 +1,30 @@
 # Zicredit Backend
 
-Backend system for the Zicredit mobile application. It provides credit simulation data and business logic, developed using NestJS.
+Backend system for the Zicredit application. It provides credit simulation data, investor management, and business logic, developed using NestJS.
 
 ## 📁 Project Structure
 
 ```
 Zicredit-Backend/
 ├── prisma/
-│   ├── schema.prisma
+│   └── migrations/
+│   └── schema.prisma
 ├── src/
-│   ├── modules/
-│   │   ├── auth/
-│   │   ├── users/
-│   │   ├── credit/
-│   ├── main.ts
+│   ├── Upload/
+│   ├── auth/
+│   ├── company/
+│   ├── control-roles/
+│   ├── database/
+│   ├── investment/
+│   ├── mail/
+│   ├── pagination/
+│   ├── project/
+│   ├── user/
+│   ├── app.controller.spec.ts
+│   ├── app.controller.ts
+│   ├── app.module.ts
+│   ├── app.service.ts
+│   └── main.ts
 ├── test/
 ├── .dockerignore
 ├── .eslintrc.js
@@ -33,77 +44,72 @@ Zicredit-Backend/
 ## 🚀 Technologies Used
 
 - **Node.js**: JavaScript runtime environment.
-- **NestJS**: A progressive Node.js framework for building efficient and scalable server-side applications.
-- **TypeScript**: A strongly typed programming language that builds on JavaScript.
-- **PostgreSQL**: A powerful, open-source object-relational database system.
-- **Prisma**: Next-generation Node.js and TypeScript ORM.
-- **Docker**: Platform for developing, shipping, and running applications in containers.
+- **NestJS**: A progressive Node.js framework for scalable backend applications.
+- **TypeScript**: Strongly typed language built on JavaScript.
+- **PostgreSQL**: Relational database system.
+- **Prisma**: ORM for database interactions.
+- **Docker**: For containerized deployments.
 
 ## 🔐 Features
 
-- **Credit Simulation Calculations**: Provides endpoints to perform credit simulations based on user input.
-- **Interest Rates and Financial Data**: Fetches and processes relevant financial data for simulations.
-- **User Authentication**: Secure user registration and login functionalities.
-- **Modular Architecture**: Organized codebase with separation of concerns for scalability and maintainability.
+- Credit simulation and investor management.
+- User authentication with JWT.
+- Company and project management.
+- Modular and scalable architecture.
+- File upload service.
+- Email service integration.
 
 ## 🛠️ Getting Started
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/en/) installed
-- [Docker](https://www.docker.com/) installed
-- [Docker Compose](https://docs.docker.com/compose/) installed
+- Node.js
+- Docker & Docker Compose
 
 ### Installation
 
 1. **Clone the repository:**
 
-   ```bash
-   git clone https://github.com/FabricioHiury/Zicredit-Backend.git
-   cd Zicredit-Backend
-   ```
+```bash
+git clone https://github.com/FabricioHiury/Zicredit-Backend.git
+cd Zicredit-Backend
+```
 
 2. **Install dependencies:**
 
-   ```bash
-   npm install
-   ```
+```bash
+npm install
+```
 
 3. **Set up environment variables:**
 
-   Create a `.env` file in the root directory and add the necessary environment variables:
-
-   ```env
-   DATABASE_URL=postgresql://user:password@localhost:5432/zicredit
-   JWT_SECRET=your_jwt_secret
-   ```
+```env
+DATABASE_URL=postgresql://user:password@localhost:5432/zicredit
+JWT_SECRET=your_jwt_secret
+```
 
 4. **Run database migrations:**
 
-   ```bash
-   npx prisma migrate dev --name init
-   ```
+```bash
+npx prisma migrate dev --name init
+```
 
 5. **Start the development server:**
 
-   ```bash
-   npm run start:dev
-   ```
+```bash
+npm run start:dev
+```
 
-   The server will start on `http://localhost:3000`.
+The server will be available at `http://localhost:3000`.
 
 ## 🐳 Docker Setup
 
-To run the application using Docker:
+```bash
+docker-compose up --build
+```
 
-1. **Build and start the containers:**
+Then apply migrations:
 
-   ```bash
-   docker-compose up --build
-   ```
-
-2. **Apply database migrations inside the container:**
-
-   ```bash
-   docker exec -it zicredit-backend-app npx prisma migrate dev --name init
-   ```
+```bash
+docker exec -it zicredit-backend-app npx prisma migrate dev --name init
+```
